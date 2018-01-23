@@ -48,11 +48,11 @@ More documentation is coming soon, but see the [source API documentation](https:
 ## Example
 
 1. [Using `argparse` and a custom method named snakeparser in your snakeparse file](https://github.com/nh13/snakeparse/blob/master/examples/argparse/method/README.md). 
-2. [Using `argparse` and a concrete sub-class of SnakeParser in your snake parse file]((https://github.com/nh13/snakeparse/blob/master/examples/argparse/class/README.md).
+2. [Using `argparse` and a concrete sub-class of SnakeParser in your snake parse file](https://github.com/nh13/snakeparse/blob/master/examples/argparse/class/README.md).
 
 For more examples, see [this link](https://github.com/nh13/snakeparse/blob/master/examples/).
 
-The example below is from (1)
+The example below is from (1).
 
 ### Setup
 
