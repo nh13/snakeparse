@@ -241,6 +241,7 @@ class SnakeArgumentParser(SnakeParser):
         '''Prints the help message to stderr'''
         self.parser.print_help()
 
+
 class SnakeParseException(Exception):
     '''The exception raised by classes in this module.'''
     pass
