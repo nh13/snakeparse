@@ -39,11 +39,11 @@ class SnakeParserTest(unittest.TestCase):
 
     def test_print_help(self):
         self.assertEqual(self.parser.print_help(), 'print_help')
-    
+
     def test_group(self):
         self.assertEqual(self.parser.group(), 'group')
         self.assertEqual(super(_DummyParser, self.parser).group(), None)
-    
+
     def test_description(self):
         self.assertEqual(self.parser.description(), 'description')
         self.assertEqual(super(_DummyParser, self.parser).description(), None)

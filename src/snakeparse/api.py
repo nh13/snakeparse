@@ -556,7 +556,10 @@ class SnakeParseConfig(object):
     @staticmethod
     def _camel_to_snake(camel_str: str) -> str:
         '''Converts a string in Camel case to Snake case.'''
-        return ''.join(['_' + c.lower() if c.isupper() else c for c in camel_str])
+        if not camel_str:
+            return camel_str
+        first_char = camel_str[0].lower()
+        return first_char + ''.join(['_' + c.lower() if c.isupper() else c for c in camel_str[1:]])
 
     @staticmethod
     def parser_from(workflow: 'SnakeParseWorkflow') -> SnakeParser:
@@ -581,6 +584,40 @@ class SnakeParseConfig(object):
             return cls(usage=argparse.SUPPRESS)
         else:
             return cls()
+
+    @staticmethod
+    def config_parser() -> argparse.ArgumentParser:
+        '''Returns an argparse.ArgumentParser for the configuration options'''
+        parser = _ArgumentParser(usage=SnakeParse.usage_short(), allow_abbrev=False)
+        parser.add_argument('--config',
+            help='The path to the snakeparse configuration file (can be JSON, YAML, or HOCON).',
+            type=Path)
+        parser.add_argument('--snakefile-globs',
+            help='Optionally, or more glob strings specifying where SnakeMake (snakefile) files can be found',
+            nargs='*',
+            default=[])
+        parser.add_argument('--snakeparse-globs',
+            help=f'Optionally, or more glob strings specifying where SnakeParse ({SnakeParseConfig.DEFAULT_SNAKEPARSE_EXTENSION}) files can be found',
+            nargs='*',
+            default=[])
+        parser.add_argument('--prog',
+            help='The name of the tool-chain to use ont the command-line',
+            default='snakeparse')
+        parser.add_argument('--snakemake',
+            help='The path to the snakemake executable, otherwise it should be on the system path',
+            type=Path)
+        parser.add_argument('--name-transform',
+            help='Transform the name of the workflow from Snake case to Camel case ("snake_to_camel") or vice versa ("camel_to_snake")',
+            default='snake_to_camel')
+        parser.add_argument('--parent-dir-is-group-name',
+            help='In the last resort if no group name is found, use the name of the parent directory of the snakefile as the group name',
+            type=bool,
+            default=False)
+        parser.add_argument('--extra-help',
+            help='Produce help with extra debugging information',
+            type=bool,
+            default=False)
+        return parser
 
     def _find_snakeparse(self, snakefile: Path) -> Path:
         '''Finds the SnakeParse file associated with the snakefile
@@ -617,39 +654,6 @@ class SnakeParseConfig(object):
 
         return snakeparse
 
-    @staticmethod
-    def config_parser() -> argparse.ArgumentParser:
-        '''Returns an argparse.ArgumentParser for the configuration options'''
-        parser = _ArgumentParser(usage=SnakeParse.usage_short(), allow_abbrev=False)
-        parser.add_argument('--config',
-            help='The path to the snakeparse configuration file (can be JSON, YAML, or HOCON).',
-            type=Path)
-        parser.add_argument('--snakefile-globs',
-            help='Optionally, or more glob strings specifying where SnakeMake (snakefile) files can be found',
-            nargs='*',
-            default=[])
-        parser.add_argument('--snakeparse-globs',
-            help=f'Optionally, or more glob strings specifying where SnakeParse ({SnakeParseConfig.DEFAULT_SNAKEPARSE_EXTENSION}) files can be found',
-            nargs='*',
-            default=[])
-        parser.add_argument('--prog',
-            help='The name of the tool-chain to use ont the command-line',
-            default='snakeparse')
-        parser.add_argument('--snakemake',
-            help='The path to the snakemake executable, otherwise it should be on the system path',
-            type=Path)
-        parser.add_argument('--name-transform',
-            help='Transform the name of the workflow from Snake case to Camel case ("snake_to_camel") or vice versa ("camel_to_snake")',
-            default='snake_to_camel')
-        parser.add_argument('--parent-dir-is-group-name',
-            help='In the last resort if no group name is found, use the name of the parent directory of the snakefile as the group name',
-            type=bool,
-            default=False)
-        parser.add_argument('--extra-help',
-            help='Produce help with extra debugging information',
-            type=bool,
-            default=False)
-        return parser
 
 class SnakeParse(object):
     '''The main entry point for command-line parsing for Snakemake.
