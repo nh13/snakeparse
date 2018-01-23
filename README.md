@@ -83,9 +83,9 @@ rule message:
 ```python
 from snakeparse.parser import argparser
 def snakeparser(**kwargs):
-	    p = argparser(**kwargs)
-		p.parser.add_argument('--message', help='The message.', required=True)
-		return p
+    p = argparser(**kwargs)
+    p.parser.add_argument('--message', help='The message.', required=True)
+    return p
 ```
 
 ### Execution
@@ -94,22 +94,22 @@ def snakeparser(**kwargs):
 
 You can run the installed `snakeparse` utility as follows:
 
-```snakeparse --snakefile examples/argparse/write_message.smk -- --message "Hello World!"```
+```snakeparse --snakefile examples/argparse/method/write_message.smk -- --message "Hello World!"```
 
 or 
 
-```snakeparse --snakefile-globs examples/argparse/* -- WriteMessage --message "Hello World!"```
+```snakeparse --snakefile-globs examples/argparse/method/* -- WriteMessage --message "Hello World!"```
 
 #### Programmatic Execution
 
 ```python
-config = SnakeParseConfig(snakefile_globs='~/examples/argparse/*smk')
+config = SnakeParseConfig(snakefile_globs='~/examples/argparse/method/*smk')
 SnakeParse(args=sys.argv[1:], config=config).run()
 ```
 
 or alternatively `SnakeParse` accepts leading configuration arguments:
 
 ```python
-args = ['--snakefile-globs', '~/examples/argparse/*smk'] + sys.argv[1:]
+args = ['--snakefile-globs', '~/examples/argparse/method/*smk'] + sys.argv[1:]
 SnakeParse(args=args, config=config).run()
 ```
