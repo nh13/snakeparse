@@ -859,7 +859,11 @@ class SnakeParse(object):
         try:
             parser.parse_args_file(args_file=args_file)
         except SnakeParseException as e:
+            # error in specifying the argument
             self._print_workflow_help(workflow=workflow, parser=parser, message=str(e))
+        except SystemExit:
+            # most likely help
+            self._print_workflow_help(workflow=workflow, parser=parser, message=None)
 
     def _print_workflow_help(self, workflow: 'SnakeParseWorkflow', parser: 'SnakeParser', message: Optional[str] = None) -> None:
         '''Prints the help message with all available workflows and the workflow
@@ -867,10 +871,13 @@ class SnakeParse(object):
         self._usage(exit=False)
         sys.stderr.write(f'\n{workflow.name} Arguments:\n')
         self._print_line()
+        sys.stderr.write('\n')
         # Next print the parser usage
         parser.print_help()
         # Next the message
-        sys.stderr.write(f'\nerror: {message}\n')
+        if message:
+            sys.stderr.write(f'\nerror: {message}')
+        sys.stderr.write('\n')
         sys.exit(2)
 
     @staticmethod
