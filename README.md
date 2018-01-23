@@ -17,6 +17,10 @@ Making [Snakemake](https://bitbucket.org/snakemake/snakemake) workflows into ful
 - I wanted an API or library to configure how to group and organize the workflows, and how to display them on the command line.
 - I didn't want to write this library more than once.
 
+## Demo
+
+![Snakeparse Demo](https://github.com/nh13/snakeparse/blob/master/examples/snakeparse-demo.gif)
+
 ## Installation
 
 Python 3.6 or higher is required.
