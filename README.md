@@ -58,19 +58,6 @@ You'll need to add the following to your snakefile and create a new file to stor
 [`Source: examples/argparse/write_message.smk`](https://github.com/nh13/snakeparse/blob/master/examples/argparse/write_message.smk)
 
 ```python
-from snakeparse.api import SnakeArgumentParser
-class Parser(SnakeArgumentParser):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.parser.add_argument('--message', help='The message.', required=True)
-```
-
-#### Snakeparse file
-
-[`Source: examples/argparse/write_message_snakeparser.py`](https://github.com/nh13/snakeparse/blob/master/examples/argparse/write_message_snakeparser.py)
-
-
-```python
 from write_message_snakeparser import Parser
 args = Parser().parse_config(config=config)
 
@@ -82,6 +69,19 @@ rule all:
 rule message:
     output: 'message.txt'
     shell: 'echo {args.message} > {output}'
+```
+
+#### Snakeparse file
+
+[`Source: examples/argparse/write_message_snakeparser.py`](https://github.com/nh13/snakeparse/blob/master/examples/argparse/write_message_snakeparser.py)
+
+
+```python
+from snakeparse.api import SnakeArgumentParser
+class Parser(SnakeArgumentParser):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.parser.add_argument('--message', help='The message.', required=True)
 ```
 
 ### Execution
