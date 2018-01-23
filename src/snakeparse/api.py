@@ -92,11 +92,14 @@ In the above example, the arguments ['--force-run', 'rule-1', 'rule-2'] are
 passed to Snakemake, while the arguments ['--message', 'Hello!'] are passed to
 the SnakeParser for the Example workflow.
 
-For your snakefile source to receive the parsed arguments, you must
-extend the SnakeParse class.  For convenience when using the argparse module for
-argument parsing, extend the SnakeArgumentParser.  The snakeparse file should
-contain your custom SnakeParser class.  For the Example workflow above, an
-example implementation is as follows in a file called 'example_snakeparser.py':
+Ther are two ways for your snakefile source to receive the parsed arguments: (1)
+define a concrete subclass of SnakeParse in your snakeparse file, or (2) define
+a method 'snakeparser(**kwargs)' that returns a concrete sub-class of
+SnakeParse.  For convenience when implementing parsing using the argparse
+module, the class snakeparse.api.SnakeArgumentParser can be used for (1) while
+the method snakeparse.api.argparser can be used for (2).  For the Example
+workflow above, an example implementation is as follows in a file called
+'example_snakeparser.py' with a concrete class definition:
 
     from snakeparse.api import SnakeArgumentParser
     class Parser(SnakeArgumentParser):
@@ -104,14 +107,31 @@ example implementation is as follows in a file called 'example_snakeparser.py':
             super().__init__(**kwargs)
             self.parser.add_argument('--message', help='The message.', required=True)
 
-Prior to the definitions of your rules in your snakefile source,
+and prior to the definitions of your rules in your snakefile source,
 add the following two lines of code:
+
     from example_snakeparser import Parser
     args = Parser().parse_config(config=config)
 
-The first line imports your custom parser (make sure to modify the module to
-match the your workflow's name), and the second line retrieves and parses the
-arguments from Snakemake's configuration object.
+This import here imports your custom module, so make sure to rename it
+appropriately.
+
+Alternatively, a method can be defined in 'example_snakeparser.py'
+
+    from snakeparse.parser import argparser
+    def snakeparser(**kwargs):
+        p = argparser(**kwargs)
+        p.parser.add_argument('--message', help='The message.', required=True)
+        return p
+
+and prior to the definitions of your rules in your snakefile source,
+add the following two lines of code:
+
+    from example_snakeparser import snakeparser
+    args = snakeparser().parse_config(config=config)
+
+This import here imports your custom module, so make sure to rename it
+appropriately.
 
 The module contains the following public classes:
 
@@ -572,18 +592,35 @@ class SnakeParseConfig(object):
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         #sys.modules[module_name] = module
-        # find the first class that inherits from SnakeParser
-        classes = inspect.getmembers(module, lambda obj: inspect.isclass(obj) and not inspect.isabstract(obj))
-        if not classes:
-            raise SnakeParseException(f'Could not find a subclass of SnakeParser in {workflow.snakeparse}')
-        elif len(classes) > 1:
-            raise SnakeParseException(f'Found {len(classes)} subclasses of SnakeParser in {workflow.snakeparse}')
-        name, cls = classes[0]
-        # create a new instance
-        if issubclass(cls, SnakeArgumentParser):
-            return cls(usage=argparse.SUPPRESS)
+
+        # find concrete classes that inherits from SnakeParser
+        class_predicate = lambda obj: inspect.isclass(obj) and not inspect.isabstract(obj) and SnakeParser in inspect.getmro(obj)
+        classes = inspect.getmembers(module, class_predicate)
+        classes = [parser_class for name, parser_class in classes]
+
+        # find all methods that are named 'snakeparser'
+        method_predicate = lambda obj: inspect.isfunction(obj)
+        methods = inspect.getmembers(module, method_predicate)
+        methods = [m for name, m in methods if 'snakeparser' == name]
+
+        if len(classes) + len(methods) == 0:
+            raise SnakeParseException(f'Could not find either a concrete subclass of SnakeParser or a method named snakeparser in {workflow.snakeparse}')
+        elif len(classes) + len(methods) > 1:
+            raise SnakeParseException(f'Found {len(clases)} concrete subclasses of SnakeParser and {len(methods)} methods named snakeparser in {workflow.snakeparse}')
+        elif len(classes) == 1 and len(methods) == 0:
+            parser_class = classes[0]
+            if issubclass(parser_class, SnakeArgumentParser):
+                return parser_class(usage=argparse.SUPPRESS)
+            else:
+                return parser_class()
         else:
-            return cls()
+            assert len(classes) == 0 and len(methods) == 1, f'Bug: {len(classes)} != 0 and {len(methods)} != 1'
+            parser_method = methods[0]
+            parser = parser_method()
+            if issubclass(parser.__class__, SnakeArgumentParser):
+                return parser_method(usage=argparse.SUPPRESS)
+            else:
+                return parser
 
     @staticmethod
     def config_parser() -> argparse.ArgumentParser:
@@ -694,7 +731,6 @@ class SnakeParse(object):
                 sys.exit(2)
 
             # Create the config
-            print(vars(config_args))
             self.config = SnakeParseConfig(
                 config_path              = config_args.config,
                 prog                     = config_args.prog,
@@ -762,13 +798,10 @@ class SnakeParse(object):
                     workflow_name = name
                     snakemake_args_end = idx
                     workflow_args_start = idx+2
-            if workflow_name is None:
-                if len(self.config.workflows) == 1:
-                    self._usage('No workflows found.')
-                else:
-                    workflow_name  = list(self.config.workflows.keys())[0]
-                    snakemake_args_end = idx
-                    workflow_args_start = idx+1
+            if workflow_name is None and  len(self.config.workflows) == 1:
+                workflow_name  = list(self.config.workflows.keys())[0]
+                snakemake_args_end = idx
+                workflow_args_start = idx+1
         elif args:
             # find workflow name in args, use it
             for wf_name in self.config.workflows:
@@ -777,6 +810,7 @@ class SnakeParse(object):
                     workflow_name       = wf_name
                     snakemake_args_end  = args.index(wf_name)
                     workflow_args_start = args.index(wf_name) + 1
+
         if workflow_name is None:
             # TODO: search in args for any similar workflow now and suggest it
             self._usage('No workflow given.')

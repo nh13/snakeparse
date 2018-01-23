@@ -1,4 +1,4 @@
-## SnakeParse using `argparse`
+## SnakeParse using `argparse` and a custom method named snakeparser 
 
 To execute this example, run:
 

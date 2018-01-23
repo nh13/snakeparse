@@ -45,21 +45,26 @@ To get started, run `snakeparse --help`.
 
 More documentation is coming soon, but see the [source API documentation](https://github.com/nh13/snakeparse/blob/master/src/snakeparse/api.py) in the meantime.
 
-## A Simple Example
+## Example
 
-For more examples, see [this link](https://github.com/nh13/snakeparse/blob/master/examples/README.md).
+1. [Using `argparse` and a custom method named snakeparser in your snakeparse file](https://github.com/nh13/snakeparse/blob/master/examples/argparse/method/README.md). 
+2. [Using `argparse` and a concrete sub-class of SnakeParser in your snake parse file]((https://github.com/nh13/snakeparse/blob/master/examples/argparse/class/README.md).
+
+For more examples, see [this link](https://github.com/nh13/snakeparse/blob/master/examples/).
+
+The example below is from (1)
 
 ### Setup
 
-You'll need to add the following to your snakefile and create a new file to store the snakeparser.
+Modify your snakefile to include two-lines of python, and put your workflow-specific parsing code in a snakeparser file.
 
 #### Snakemake file
 
-[`Source: examples/argparse/write_message.smk`](https://github.com/nh13/snakeparse/blob/master/examples/argparse/write_message.smk)
+[`Source: examples/argparse/method/write_message.smk`](https://github.com/nh13/snakeparse/blob/master/examples/argparse/method/write_message.smk)
 
 ```python
-from write_message_snakeparser import Parser
-args = Parser().parse_config(config=config)
+from write_message_snakeparser import snakeparser
+args = snakeparser().parse_config(config=config)
 
 rule all:
     input:
@@ -73,33 +78,17 @@ rule message:
 
 #### Snakeparse file
 
-[`Source: examples/argparse/write_message_snakeparser.py`](https://github.com/nh13/snakeparse/blob/master/examples/argparse/write_message_snakeparser.py)
-
+[`Source: examples/argparse/method/write_message_snakeparser.py`](https://github.com/nh13/snakeparse/blob/master/examples/argparse/method/write_message_snakeparser.py)
 
 ```python
-from snakeparse.api import SnakeArgumentParser
-class Parser(SnakeArgumentParser):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.parser.add_argument('--message', help='The message.', required=True)
+from snakeparse.parser import argparser
+def snakeparser(**kwargs):
+	    p = argparser(**kwargs)
+		p.parser.add_argument('--message', help='The message.', required=True)
+		return p
 ```
 
 ### Execution
-
-#### Programmatic Execution
-
-```python
-config = SnakeParseConfig(snakefile_globs='~/examples/argparse/*smk')
-SnakeParse(args=sys.argv[1:], config=config).run()
-```
-
-or alternatively `SnakeParse` accepts leading configuration arguments:
-
-
-```python
-args = ['--snakefile-globs', '~/examples/argparse/*smk'] + sys.argv[1:]
-SnakeParse(args=args, config=config).run()
-```
 
 #### Snakeparse Command Line Execution
 
@@ -110,3 +99,17 @@ You can run the installed `snakeparse` utility as follows:
 or 
 
 ```snakeparse --snakefile-globs examples/argparse/* -- WriteMessage --message "Hello World!"```
+
+#### Programmatic Execution
+
+```python
+config = SnakeParseConfig(snakefile_globs='~/examples/argparse/*smk')
+SnakeParse(args=sys.argv[1:], config=config).run()
+```
+
+or alternatively `SnakeParse` accepts leading configuration arguments:
+
+```python
+args = ['--snakefile-globs', '~/examples/argparse/*smk'] + sys.argv[1:]
+SnakeParse(args=args, config=config).run()
+```
