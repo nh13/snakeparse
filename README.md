@@ -94,11 +94,11 @@ def snakeparser(**kwargs):
 
 You can run the installed `snakeparse` utility as follows:
 
-```snakeparse --snakefile examples/argparse/method/write_message.smk -- --message "Hello World!"```
+```snakeparse --snakefile examples/argparse/method/write_message.smk -- --message 'Hello World!'```
 
 or 
 
-```snakeparse --snakefile-globs examples/argparse/method/* -- WriteMessage --message "Hello World!"```
+```snakeparse --snakefile-globs examples/argparse/method/* -- WriteMessage --message 'Hello World!'```
 
 #### Programmatic Execution
 
