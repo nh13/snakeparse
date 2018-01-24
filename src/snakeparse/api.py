@@ -586,11 +586,20 @@ class SnakeParseConfig(object):
         '''Builds the SnakeParser for the given workflow'''
         # load the snakeparse file as a module.  Taken from:
         # https://docs.python.org/3/library/importlib.html#importing-a-source-file-directly
-        module_name = 'snakeparser'
-        assert module_name not in sys.modules
-        spec = importlib.util.spec_from_file_location(module_name, workflow.snakeparse)
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
+
+        def load_module(module_name: str, path: Path) -> None:
+            assert module_name not in sys.modules, f'Module name {module_name} already exists for {path}'
+            spec = importlib.util.spec_from_file_location(module_name, path)
+            module = importlib.util.module_from_spec(spec)
+            #sys.modules[module_name] = module
+            try:
+                spec.loader.exec_module(module)
+            except ImportError as e:
+                raise SnakeParseException(f'Could not import {module_name} from {path}:\n{e}')
+            return module
+
+        module = load_module(module_name=workflow.snakeparse.with_suffix('').name, path=workflow.snakeparse)
+
         #sys.modules[module_name] = module
 
         # find concrete classes that inherits from SnakeParser
@@ -728,7 +737,6 @@ class SnakeParse(object):
         if self.config is None:
             # Dummy value in case a usage is needed.
             self.config = SnakeParseConfig()
-            print(str(args))
 
             # parse the leading arguments until an unknonwn argument is found or no more
             # arguments exist.  Prepend an arg for argparse to work.

@@ -117,3 +117,7 @@ or alternatively `SnakeParse` accepts leading configuration arguments:
 args = ['--snakefile-globs', '~/examples/argparse/method/*smk'] + sys.argv[1:]
 SnakeParse(args=args, config=config).run()
 ```
+
+## Limitations
+
+The snakeparser file (`_snakeparser.py`) cannot have relative imports.
