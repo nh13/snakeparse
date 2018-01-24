@@ -29,7 +29,9 @@ class SnakeArgumentParserTest(unittest.TestCase):
         ]
 
     def test_init(self):
-        self.assertDictEqual(vars(self.parser), {'parser' : self.parser.parser})
+        self.assertIsNone(self.parser.group)
+        self.assertIsNone(self.parser.description)
+        self.assertIsNotNone(self.parser)
 
     def test_no_parsing_error(self):
         args = self.parser.parse_args(args=self.args_ok)

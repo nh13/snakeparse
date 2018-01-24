@@ -206,7 +206,8 @@ class SnakeParser(ABC):
     FROMFILE_PREFIX_CHARS = '@'
 
     def __init__(self, **kwargs):
-        pass
+        self._group = None
+        self._description = None
 
     @abstractmethod
     def parse_args(self, args: List[str]) -> Any:
@@ -228,15 +229,34 @@ class SnakeParser(ABC):
     def print_help(self) -> None:
         '''Prints the help message to stderr'''
 
+    @property
     def group(self):
         '''The name of the workflow group to which this group belongs.'''
-        return None
+        return self._group
 
+    @group.setter
+    def group(self, value):
+        self._group = value
+
+    @group.deleter
+    def group(self):
+        del self._group
+
+    @property
     def description(self):
         '''A short description of the workflow, used when listing the
         workflows.
         '''
-        return None
+        return self._description
+
+    @description.setter
+    def description(self, value):
+        self._description = value
+
+    @description.deleter
+    def description(self):
+        del self._description
+
 
 
 class SnakeArgumentParser(SnakeParser):
@@ -512,10 +532,10 @@ class SnakeParseConfig(object):
             if wf.group is not None and wf.description is not None:
                 continue
             parser = self.parser_from(workflow=wf)
-            if parser.group() is not None:
-                wf.group = parser.group()
-            if parser.description() is not None:
-                wf.description = parser.description()
+            if parser.group is not None:
+                wf.group = parser.group
+            if parser.description is not None:
+                wf.description = parser.description
 
         # Add the description for each group
         if 'groups' in data:
