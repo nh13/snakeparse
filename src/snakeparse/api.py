@@ -678,9 +678,16 @@ class SnakeParseConfig(object):
 
         # check the globbed files
         if snakeparse is None:
-            snakename = snakefile.with_suffix('')
+            snakename = snakefile.with_suffix('').name
             for path in self.__snakeparse_paths:
-                if (path.with_suffix('')).endswith(snakename):
+                if path.name.endswith(SnakeParseConfig.DEFAULT_SNAKEPARSE_EXTENSION):
+                    name = path.name[:len(path.name)-len(SnakeParseConfig.DEFAULT_SNAKEPARSE_EXTENSION)]
+                elif path.name.endswith('.py'):
+                    name = path.name[:len(path.name)-len('.py')]
+                else:
+                    raise SnakeParseException(f'Bug: found a snakeparse file without the .py extension: {path}')
+
+                if name == snakename:
                     snakeparse = path
                     break
                 paths_checked.append(path)
@@ -719,14 +726,21 @@ class SnakeParse(object):
         occurrence of '--').  Next check if the workflow name is after the '--'.
         '''
         if self.config is None:
+            # Dummy value in case a usage is needed.
+            self.config = SnakeParseConfig()
+            print(str(args))
+
             # parse the leading arguments until an unknonwn argument is found or no more
             # arguments exist.  Prepend an arg for argparse to work.
-            args_end, config_args = self._parse_known_args(args=args, parser=SnakeParseConfig.config_parser())
-            remaining_args = args[args_end:]
+            try:
+                args_end, config_args = self._parse_known_args(args=args, parser=SnakeParseConfig.config_parser())
+                remaining_args = args[args_end:]
+            except SnakeParseException as e:
+                self._usage(message=str(e))
+                sys.exit(2)
 
             # Check if we should print the help
             if (len(remaining_args) == 1 and args[-1] in ['--help', '-h']) or len(args) == 1:
-                self.config = SnakeParseConfig()
                 self._usage(message=None)
                 sys.exit(2)
 
@@ -890,10 +904,15 @@ class SnakeParse(object):
         namespace = argparse.Namespace()
         end = 1
         while end <= len(args):
-            namespace, remaining = parser.parse_known_args(args=args[:end])
-            #print(f'\t_parse_known_args {end} {remaining} {namespace} {args[:end]}')
-            if remaining:
-                return end-1, namespace
+            try:
+                namespace, remaining = parser.parse_known_args(args=args[:end])
+                #print(f'\t_parse_known_args {end} {remaining} {namespace} {args[:end]}')
+                if remaining:
+                    return end-1, namespace
+            except SnakeParseException:
+                # Keep going, as we may require values in args
+                pass
+
             end += 1
         return end, namespace
 

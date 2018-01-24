@@ -9,7 +9,7 @@ The module contains the following public methods:
 from .api import SnakeArgumentParser
 
 
-def argparser(**kwargs):
+def argparser(**kwargs) -> SnakeArgumentParser:
     ''' Returns an SnakeParser that has an initialized member variable parser
     of type argparse.ArgumentParser.  The keyword arguments are passed to the
     constructor of argparse.ArgumentParser.
