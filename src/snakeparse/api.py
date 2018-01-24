@@ -537,6 +537,9 @@ class SnakeParseConfig(object):
             if parser.description is not None:
                 wf.description = parser.description
 
+        # sort the workflows by group, then name
+        self.workflows = OrderedDict([(wf.name, wf) for wf in sorted(self.workflows.values(), key=lambda wf: (str(wf.group), wf.name))])
+
         # Add the description for each group
         if 'groups' in data:
             self.groups[group] = data['groups']
