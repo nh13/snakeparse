@@ -187,7 +187,20 @@ import subprocess
 
 
 class _ArgumentParser(argparse.ArgumentParser):
-    ''' A custom argument parser that gives the reason why an error occured. '''
+    ''' A custom argument parser that gives the reason why an error occured.
+        Also changes the title of the optional aguments from 'optional arguments'
+        to 'Optional options'.  Also, by default the print_help method will not
+        do anything (i.e. print the help message).  This is so that it will only
+        be displayed when snakeparse wishes.
+    '''
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._optionals.title = 'Optional options'
+
+    def print_help(self, suppress: bool = True):
+        if not suppress:
+            super().print_help()
 
     def error(self, message: str):
         ''' Raises an SnakeParseException with the given message.'''
@@ -279,7 +292,7 @@ class SnakeArgumentParser(SnakeParser):
 
     def print_help(self) -> None:
         '''Prints the help message to stderr'''
-        self.parser.print_help()
+        self.parser.print_help(suppress=False)
 
 
 class SnakeParseException(Exception):
@@ -667,9 +680,9 @@ class SnakeParseConfig(object):
                 return parser
 
     @staticmethod
-    def config_parser() -> argparse.ArgumentParser:
+    def config_parser(usage = argparse.SUPPRESS) -> argparse.ArgumentParser:
         '''Returns an argparse.ArgumentParser for the configuration options'''
-        parser = _ArgumentParser(usage=SnakeParse.usage_short(), allow_abbrev=False)
+        parser = _ArgumentParser(usage=usage, allow_abbrev=False)
         parser.add_argument('--config',
             help='The path to the snakeparse configuration file (can be JSON, YAML, or HOCON).',
             type=Path)
@@ -776,7 +789,7 @@ class SnakeParse(object):
             # parse the leading arguments until an unknonwn argument is found or no more
             # arguments exist.  Prepend an arg for argparse to work.
             try:
-                args_end, config_args = self._parse_known_args(args=args, parser=SnakeParseConfig.config_parser())
+                args_end, config_args = self._parse_known_args(args=args, parser=SnakeParseConfig.config_parser(usage=SnakeParse.usage_short()))
                 remaining_args = args[args_end:]
             except SnakeParseException as e:
                 self._usage(message=str(e))
@@ -983,11 +996,11 @@ class SnakeParse(object):
         workflow_description_columns = group_description_columns - 1
 
         # Pre-amble
-        sys.stderr.write(self._usage_short() + '\n')
-        sys.stderr.write(f'Version: {__version__}\n')
+        sys.stderr.write("Usage: " + self._usage_short() + '\n')
+        sys.stderr.write(f'Version: {__version__}\n\n')
 
         # SnakeParse help
-        SnakeParseConfig.config_parser().print_help()
+        SnakeParseConfig.config_parser().print_help(suppress=False)
 
         # Print the workflows, grouped by group.
         if self.config.workflows:

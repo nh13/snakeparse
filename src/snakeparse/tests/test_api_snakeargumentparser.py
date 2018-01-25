@@ -23,7 +23,7 @@ class SnakeArgumentParserTest(unittest.TestCase):
         self.help_message = [
             'usage: python3.6 -m unittest [-h] --message MESSAGE', # skip this line
             '',
-            'optional arguments:',
+            'Optional options:',
             '  -h, --help         show this help message and exit',
             '  --message MESSAGE  The message'
         ]
