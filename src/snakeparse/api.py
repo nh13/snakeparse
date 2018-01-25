@@ -607,9 +607,20 @@ class SnakeParseConfig(object):
     @staticmethod
     def parser_from(workflow: 'SnakeParseWorkflow') -> SnakeParser:
         '''Builds the SnakeParser for the given workflow'''
+
+        # Insert the directory containing the snakeparse file so that relative
+        # imports work and imports in the snakeparse directory
+        parent_module_name = str(workflow.snakeparse.resolve().parent)
+        sys.path.insert(0, parent_module_name)
+
+        # Compile and execute it!
+        with workflow.snakeparse.open('rU') as fh:
+            # NB: should we backup globals()
+            code = compile(fh.read(), str(workflow.snakeparse), 'exec')
+            exec(code, globals())
+
         # load the snakeparse file as a module.  Taken from:
         # https://docs.python.org/3/library/importlib.html#importing-a-source-file-directly
-
         def load_module(module_name: str, path: Path) -> None:
             assert module_name not in sys.modules, f'Module name {module_name} already exists for {path}'
             spec = importlib.util.spec_from_file_location(module_name, path)

@@ -120,4 +120,24 @@ SnakeParse(args=args, config=config).run()
 
 ## Limitations
 
-The snakeparser file (`_snakeparser.py`) cannot have relative imports.
+
+### Imports in Snakeparse Files
+
+If the snakeparser file (`_snakeparser.py`) imports relative modules, a HACK is required to work with Sakemake.
+Consider importing the module 'util' from the parent module 'commons'.  
+Typically all that is required is thi:
+
+```
+from commons import util
+```
+
+For snakeparser and snakemake to work, use this:
+
+```
+try:
+    from commons import util
+except ModuleNotFoundError:
+    from .commons import util
+```
+
+I would be gratefull for any pull request to improve this.
