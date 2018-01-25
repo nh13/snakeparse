@@ -622,7 +622,8 @@ class SnakeParseConfig(object):
         # load the snakeparse file as a module.  Taken from:
         # https://docs.python.org/3/library/importlib.html#importing-a-source-file-directly
         def load_module(module_name: str, path: Path) -> None:
-            assert module_name not in sys.modules, f'Module name {module_name} already exists for {path}'
+            if module_name in sys.modules:
+                return sys.modules[module_name]
             spec = importlib.util.spec_from_file_location(module_name, path)
             module = importlib.util.module_from_spec(spec)
             #sys.modules[module_name] = module
