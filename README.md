@@ -31,6 +31,10 @@ To install locally: `python setup.py install`.
 
 The command line utility can be run with `snakeparse`
 
+## Conda Recipe
+
+See the [conda-recipe](https://github.com/nh13/snakeparse/tree/conda-recipe) branch.
+
 ## API Documentation
 
 Coming soon!
