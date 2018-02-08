@@ -198,14 +198,14 @@ class _ArgumentParser(argparse.ArgumentParser):
         super().__init__(**kwargs)
         self._optionals.title = 'Optional options'
 
-    def print_help(self, suppress: bool = True):
+    def print_help(self, file = None, suppress: bool = True):
         if not suppress:
-            super().print_help()
+            super().print_help(file=file)
 
     def error(self, message: str):
         ''' Raises an SnakeParseException with the given message.'''
         #self.print_help()
-        #sys.stderr.write('\nerror: %s\n' % message)
+        #self.file.write('\nerror: %s\n' % message)
         #sys.exit(2)
         raise SnakeParseException(message)
 
@@ -239,8 +239,8 @@ class SnakeParser(ABC):
         return retval
 
     @abstractmethod
-    def print_help(self) -> None:
-        '''Prints the help message to stderr'''
+    def print_help(self, file=None) -> None:
+        '''Prints the help message'''
 
     @property
     def group(self):
@@ -290,9 +290,9 @@ class SnakeArgumentParser(SnakeParser):
         '''Parses command line arguments from an arguments file'''
         return self.parse_args(args=['@' + str(args_file)])
 
-    def print_help(self) -> None:
-        '''Prints the help message to stderr'''
-        self.parser.print_help(suppress=False)
+    def print_help(self, file=None) -> None:
+        '''Prints the help message'''
+        self.parser.print_help(suppress=False, file=file)
 
 
 class SnakeParseException(Exception):
@@ -763,6 +763,7 @@ class SnakeParse(object):
         - args -- The list of command line arguments.
         - config -- Optionally a SnakeParse configuration object.
         - prog -- Optionally the name of the tool-chain to display in the usage.
+        - file -- Optionally the file to write any error or help messages, defaults to sys.stdout.
     '''
 
     '''The default key to use in Snakemake's config dictionary.'''
@@ -771,9 +772,11 @@ class SnakeParse(object):
     def __init__(self,
                  args: List[str]=[],
                  config: Optional['SnakeParseConfig']=None,
-                 debug: bool = False):
+                 debug: bool = False,
+                 file = sys.stdout):
         self.config = config
         self.debug  = debug
+        self.file   = file
 
         '''
         If no config was given, try parsing the args.
@@ -939,15 +942,15 @@ class SnakeParse(object):
         '''Prints the help message with all available workflows and the workflow
         specific help.'''
         self._usage(exit=False)
-        sys.stderr.write(f'\n{workflow.name} Arguments:\n')
+        self.file.write(f'\n{workflow.name} Arguments:\n')
         self._print_line()
-        sys.stderr.write('\n')
+        self.file.write('\n')
         # Next print the parser usage
-        parser.print_help()
+        parser.print_help(file=self.file)
         # Next the message
         if message:
-            sys.stderr.write(f'\nerror: {message}')
-        sys.stderr.write('\n')
+            self.file.write(f'\nerror: {message}')
+        self.file.write('\n')
         sys.exit(2)
 
     @staticmethod
@@ -983,9 +986,8 @@ class SnakeParse(object):
             workflow_name = '[workflow name]'
         return f'{prog} [snakeparse options] [snakemake options] {workflow_name} [workflow options]'.lstrip(' ')
 
-    @staticmethod
-    def _print_line():
-        sys.stderr.write(('-'*60) + '\n')
+    def _print_line(self):
+        self.file.write(('-'*60) + '\n')
 
     def _usage(self, message: Optional[str] = None, exit: bool =True):
         '''The long usage that lists all the available workflows.'''
@@ -996,15 +998,15 @@ class SnakeParse(object):
         workflow_description_columns = group_description_columns - 1
 
         # Pre-amble
-        sys.stderr.write("Usage: " + self._usage_short() + '\n')
-        sys.stderr.write(f'Version: {__version__}\n\n')
+        self.file.write("Usage: " + self._usage_short() + '\n')
+        self.file.write(f'Version: {__version__}\n\n')
 
         # SnakeParse help
-        SnakeParseConfig.config_parser().print_help(suppress=False)
+        SnakeParseConfig.config_parser().print_help(suppress=False, file=self.file)
 
         # Print the workflows, grouped by group.
         if self.config.workflows:
-            sys.stderr.write('\nAvailable Workflows:\n')
+            self.file.write('\nAvailable Workflows:\n')
             self._print_line()
             groups = OrderedDict(self.config.groups)
             for wf in self.config.workflows.values():
@@ -1013,22 +1015,22 @@ class SnakeParse(object):
             for group, desc in groups.items():
                 name = ('Worfklows' if group is None else group) + ':'
                 desc = '' if desc is None else desc
-                sys.stderr.write(f'{name:<{group_name_columns}}{desc:<{group_description_columns}}\n')
+                self.file.write(f'{name:<{group_name_columns}}{desc:<{group_description_columns}}\n')
                 for wf in self.config.workflows.values():
                     if wf.group != group:
                         continue
                     desc = str(wf.snakefile) if wf.description is None else wf.description
-                    sys.stderr.write(f'    {wf.name:<{workflow_name_columns}}{desc:<{workflow_description_columns}}\n')
+                    self.file.write(f'    {wf.name:<{workflow_name_columns}}{desc:<{workflow_description_columns}}\n')
                     if self.debug:
-                        sys.stderr.write(f'        snakefile:  {wf.snakefile}\n')
-                        sys.stderr.write(f'        snakeparse: {wf.snakeparse}\n')
+                        self.file.write(f'        snakefile:  {wf.snakefile}\n')
+                        self.file.write(f'        snakeparse: {wf.snakeparse}\n')
                 self._print_line()
         else:
-            sys.stderr.write('\nNo workflows configured.\n')
+            self.file.write('\nNo workflows configured.\n')
             self._print_line()
 
         # Write the message
         if message is not None:
-            sys.stderr.write(f'\n{message}\n')
+            self.file.write(f'\n{message}\n')
         if exit:
             sys.exit(2)
