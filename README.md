@@ -64,18 +64,12 @@ For more examples, see [this link](https://github.com/nh13/snakeparse/blob/maste
 
 The example below is from (1).
 
-### Setup
+### Motivation
 
-Add the following to your Snakemake file (snakefile):
-
-[`Source: examples/argparse/method/write_message.smk`](https://github.com/nh13/snakeparse/blob/master/examples/argparse/method/write_message.smk)
+Consider this simple Snakemake file (snakefile):
 
 ```python
-# Import your custom parser
-from write_message_snakeparser import snakeparser
-
-# Get the arguments from the config file; this should always succeed.
-args = snakeparser().parse_config(config=config)
+message = config['message']
 
 rule all:
     input:
@@ -84,7 +78,39 @@ rule all:
 # A simple rule to write the message to the output
 rule message:
     output: 'message.txt'
-    shell: 'echo {args.message} > {output}'
+    shell: 'echo {message} > {output}'
+```
+
+You would need to run snakemake with the `--config` option:
+
+```bash
+snakemake --snakefile </path/to/snakefile> --config message='Hello World!'
+```
+
+If you forget to add the correct key/value pairs with the `--config` option, you get ugly error messages. 
+Furthermore, if you have want cleanly to not only pass in arguments to your snakefile, but also choose among multiple snakefiles all on one command line, it becomes impossible.
+
+### Setup
+
+[`Source: examples/argparse/method/write_message.smk`](https://github.com/nh13/snakeparse/blob/master/examples/argparse/method/write_message.smk)
+
+Modify the above snakefile by prepending the following:
+
+```python
+# Import the parser from snakeparse
+from snakeparse.parser import argparser
+
+def snakeparser(**kwargs):
+    ''' The method that returns the parser with all arguments added. '''
+    p = argparser(**kwargs)
+    p.parser.add_argument('--message', help='The message.', required=True)
+    return p
+
+# Get the arguments from the config file; this should always succeed.
+args = snakeparser().parse_config(config=config)
+
+# NB: you could use `args.message` directly.
+message = args.message
 ```
 
 ### Execution
