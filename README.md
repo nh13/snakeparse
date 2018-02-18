@@ -25,6 +25,8 @@ Making [Snakemake](https://bitbucket.org/snakemake/snakemake) workflows into ful
 
 Python 3.6 or higher is required.
 
+Snakemake 4.4.0 or higher is required.
+
 To clone the repository: `git clone https://github.com/nh13/snakeparse.git`.
 
 To install locally: `python setup.py install`.
@@ -55,8 +57,8 @@ More documentation is coming soon, but see the [source API documentation](https:
 
 ## Example
 
-1. [Using `argparse` and a custom method named snakeparser in your snakeparse file](https://github.com/nh13/snakeparse/blob/master/examples/argparse/method/README.md). 
-2. [Using `argparse` and a concrete sub-class of SnakeParser in your snake parse file](https://github.com/nh13/snakeparse/blob/master/examples/argparse/class/README.md).
+1. [Using `argparse` and a custom method named snakeparser](https://github.com/nh13/snakeparse/blob/master/examples/argparse/method/README.md).
+2. [Using `argparse` and a concrete sub-class of SnakeParser](https://github.com/nh13/snakeparse/blob/master/examples/argparse/class/README.md).
 
 For more examples, see [this link](https://github.com/nh13/snakeparse/blob/master/examples/).
 
@@ -64,36 +66,25 @@ The example below is from (1).
 
 ### Setup
 
-Modify your snakefile to include two-lines of python, and put your workflow-specific parsing code in a snakeparser file.
-
-#### Snakemake file
+Add the following to your Snakemake file (snakefile):
 
 [`Source: examples/argparse/method/write_message.smk`](https://github.com/nh13/snakeparse/blob/master/examples/argparse/method/write_message.smk)
 
 ```python
+# Import your custom parser
 from write_message_snakeparser import snakeparser
+
+# Get the arguments from the config file; this should always succeed.
 args = snakeparser().parse_config(config=config)
 
 rule all:
     input:
-        "message.txt"
+        'message.txt'
 
 # A simple rule to write the message to the output
 rule message:
     output: 'message.txt'
     shell: 'echo {args.message} > {output}'
-```
-
-#### Snakeparse file
-
-[`Source: examples/argparse/method/write_message_snakeparser.py`](https://github.com/nh13/snakeparse/blob/master/examples/argparse/method/write_message_snakeparser.py)
-
-```python
-from snakeparse.parser import argparser
-def snakeparser(**kwargs):
-    p = argparser(**kwargs)
-    p.parser.add_argument('--message', help='The message.', required=True)
-    return p
 ```
 
 ### Execution
@@ -104,9 +95,9 @@ You can run the installed `snakeparse` utility as follows:
 
 ```snakeparse --snakefile examples/argparse/method/write_message.smk -- --message 'Hello World!'```
 
-or 
+or
 
-```snakeparse --snakefile-globs examples/argparse/method/* -- WriteMessage --message 'Hello World!'```
+```snakeparse --snakefile-globs examples/argparse/method/*smk -- WriteMessage --message 'Hello World!'```
 
 #### Programmatic Execution
 
@@ -121,27 +112,3 @@ or alternatively `SnakeParse` accepts leading configuration arguments:
 args = ['--snakefile-globs', '~/examples/argparse/method/*smk'] + sys.argv[1:]
 SnakeParse(args=args, config=config).run()
 ```
-
-## Limitations
-
-
-### Imports in Snakeparse Files
-
-If the snakeparser file (`_snakeparser.py`) imports relative modules, a HACK is required to work with Sakemake.
-Consider importing the module 'util' from the parent module 'commons'.  
-Typically all that is required is thi:
-
-```
-from commons import util
-```
-
-For snakeparser and snakemake to work, use this:
-
-```
-try:
-    from commons import util
-except ModuleNotFoundError:
-    from .commons import util
-```
-
-I would be gratefull for any pull request to improve this.

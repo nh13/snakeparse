@@ -16,7 +16,7 @@ setup(
     packages = ['snakeparse'],
     package_dir = {'snakeparse':'src/snakeparse'}, 
     package_data = {},
-    install_requires = ['pyhocon>=0.3.38', 'pyyaml>=3.12'],
+    install_requires = ['pyhocon>=0.3.38', 'pyyaml>=3.12', 'snakemake>=4.4.0'],
     classifiers = [
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
