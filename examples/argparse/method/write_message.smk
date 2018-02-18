@@ -2,6 +2,7 @@
 from snakeparse.parser import argparser
 
 def snakeparser(**kwargs):
+    ''' The method that returns the parser with all arguments added. '''
     p = argparser(**kwargs)
     p.parser.add_argument('--message', help='The message.', required=True)
     return p
