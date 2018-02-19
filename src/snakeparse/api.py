@@ -222,7 +222,7 @@ class SnakeParser(ABC):
 
     @group.deleter
     def group(self):
-        del self._group
+        self._group = None
 
     @property
     def description(self):
@@ -237,7 +237,7 @@ class SnakeParser(ABC):
 
     @description.deleter
     def description(self):
-        del self._description
+        self._description = None
 
 
 class SnakeArgumentParser(SnakeParser):
@@ -388,8 +388,8 @@ class SnakeParseConfig(object):
         # Configure how we transform the snakefile file name to the workflow name
         if 'name_transform' in data:
             if name_transform is not None:
-                raise SnakeParseException("name_transform parameter given but found 'naming' in {config_path}")
-            self.name_transfrom_from(data['name_transform'])
+                raise SnakeParseException("name_transform parameter given but found 'name_transform' in {config_path}")
+            self.name_transform = self.name_transfrom_from(data['name_transform'])
 
         # This controls if the workflows group attribute should be set to
         # the parent directory of the snakefile
@@ -510,7 +510,7 @@ class SnakeParseConfig(object):
     def add_group(self, name: str, description: str, strict: bool = True) -> 'SnakeParseConfig':
         '''Adds a new group with the given name and description.  If strict is
         True, then no group with the same name should already exist. '''
-        if strict and name in groups:
+        if strict and name in self.groups:
             raise SnakeParseException(f"Group '{name}' already defined")
         self.groups[name] = description
         return self
@@ -553,7 +553,7 @@ class SnakeParseConfig(object):
         sys.path.insert(0, parent_module_name)
 
         # Compile and execute it!
-        with workflow.snakefile.open('rU') as fh:
+        with workflow.snakefile.open('r') as fh:
             from snakemake.parser import parse
             from snakemake.workflow import Workflow
 
@@ -563,7 +563,7 @@ class SnakeParseConfig(object):
             global config
             config = dict([(SnakeParse.ARGUMENT_FILE_NAME_KEY, None)])
             # add the config to a globals copy
-            globals_copy = globals()
+            globals_copy = dict(globals())
             globals_copy['config'] = dict([(SnakeParse.ARGUMENT_FILE_NAME_KEY, None)])
             # parsing with snakemake requires there to be a global workflow object
             globals_copy['workflow'] = Workflow(snakefile=snakefile)
@@ -579,7 +579,7 @@ class SnakeParseConfig(object):
         if len(classes) + len(methods) == 0:
             raise SnakeParseException(f'Could not find either a concrete subclass of SnakeParser or a method named snakeparser in {workflow.snakefile}')
         elif len(classes) + len(methods) > 1:
-            raise SnakeParseException(f'Found {len(clases)} concrete subclasses of SnakeParser and {len(methods)} methods named snakeparser in {workflow.snakefile}')
+            raise SnakeParseException(f'Found {len(classes)} concrete subclasses of SnakeParser and {len(methods)} methods named snakeparser in {workflow.snakefile}')
         elif len(classes) == 1 and len(methods) == 0:
             parser_class = classes[0]
             if issubclass(parser_class, SnakeArgumentParser):

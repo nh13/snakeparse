@@ -45,10 +45,10 @@ class SnakeArgumentParserTest(unittest.TestCase):
         filename = None
         with tempfile.NamedTemporaryFile('w', suffix='.args.txt', delete=False) as fh:
             fh.write('\n'.join(self.args_ok))
-            filename = fh.name
-        args = self.parser.parse_args_file(args_file=Path(filename))
+            filename = Path(fh.name)
+        args = self.parser.parse_args_file(args_file=filename)
         self.assertDictEqual(vars(args), self.args_ok_dict)
-        os.unlink(filename)
+        filename.unlink()
 
     def test_print_help(self):
         import sys
@@ -58,7 +58,6 @@ class SnakeArgumentParserTest(unittest.TestCase):
         stderr = captured_output_to_str(stderr, lines=False)
         self.assertListEqual(stdout[1:], self.help_message[1:])
         self.assertEqual(stderr, '')
-
 
 
 if __name__ == '__main__':

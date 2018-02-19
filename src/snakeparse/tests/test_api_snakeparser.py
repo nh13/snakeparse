@@ -16,7 +16,6 @@ class _DummyParser(SnakeParser):
         return 'print_help'
 
 
-
 class SnakeParserTest(unittest.TestCase):
 
     def setUp(self):
@@ -39,11 +38,30 @@ class SnakeParserTest(unittest.TestCase):
 
     def test_group(self):
         self.assertEqual(self.parser.group, 'group')
-        self.assertEqual(_DummyParser().group, None)
+        self.assertIsNone(_DummyParser().group)
+
+    def test_group_del(self):
+        parser = _DummyParser()
+        parser.group = 'group'
+        self.assertEqual(parser.group, 'group')
+        del parser.group
+        self.assertIsNone(parser.group)
 
     def test_description(self):
         self.assertEqual(self.parser.description, 'description')
-        self.assertEqual(_DummyParser().description, None)
+        self.assertIsNone(_DummyParser().description)
+
+    def test_description_del(self):
+        parser = _DummyParser()
+        parser.description = 'description'
+        self.assertEqual(parser.description, 'description')
+        del parser.description
+        self.assertIsNone(parser.description)
+
+    def test_parse_config_none_argfile(self):
+        config = { SnakeParse.ARGUMENT_FILE_NAME_KEY : None }
+        retval = self.parser.parse_config(config=config)
+        self.assertEqual(len(vars(retval)), 0)
 
 
 if __name__ == '__main__':
