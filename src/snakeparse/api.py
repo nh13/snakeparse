@@ -205,7 +205,10 @@ class SnakeParser(ABC):
             args_file = Path(config[SnakeParse.ARGUMENT_FILE_NAME_KEY])
             return self.parse_args_file(args_file=args_file)
         else:
-            return argparse.Namespace()
+            try:
+                return self.parse_args('')
+            except SnakeParseException:
+                return argparse.Namespace()
 
     @abstractmethod
     def print_help(self, file=None) -> None:
@@ -552,6 +555,8 @@ class SnakeParseConfig(object):
         parent_module_name = str(workflow.snakefile.resolve().parent)
         sys.path.insert(0, parent_module_name)
 
+        exec_exception = None
+
         # Compile and execute it!
         with workflow.snakefile.open('r') as fh:
             from snakemake.parser import parse
@@ -571,15 +576,21 @@ class SnakeParseConfig(object):
             # compile the snakefile using snakemake's parse method
             code, linemap, rulecount = snakemake_parser.parse(snakefile)
             code = compile(code, snakefile, 'exec')
-            exec(code, globals_copy)
+            try:
+                exec(code, globals_copy)
+            except AttributeError as e:
+                # in the case of required parser arguments, we may get some type
+                # of exception
+                #if not str(e).startswith("'Namespace'"):
+                #    raise e
+                exec_exception = SnakeParseException(f'Could not compile {snakefile}', e)
 
         classes = [obj for key, obj in globals_copy.items() if inspect.isclass(obj) and not inspect.isabstract(obj) and SnakeParser in inspect.getmro(obj)]
         methods = [obj for key, obj in globals_copy.items() if key == 'snakeparser' and inspect.isfunction(obj)]
-
         if len(classes) + len(methods) == 0:
-            raise SnakeParseException(f'Could not find either a concrete subclass of SnakeParser or a method named snakeparser in {workflow.snakefile}')
+            raise SnakeParseException(f'Could not find either a concrete subclass of SnakeParser or a method named snakeparser in {workflow.snakefile}', exec_exception)
         elif len(classes) + len(methods) > 1:
-            raise SnakeParseException(f'Found {len(classes)} concrete subclasses of SnakeParser and {len(methods)} methods named snakeparser in {workflow.snakefile}')
+            raise SnakeParseException(f'Found {len(classes)} concrete subclasses of SnakeParser and {len(methods)} methods named snakeparser in {workflow.snakefile}', exec_exception)
         elif len(classes) == 1 and len(methods) == 0:
             parser_class = classes[0]
             if issubclass(parser_class, SnakeArgumentParser):
