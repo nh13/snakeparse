@@ -578,7 +578,7 @@ class SnakeParseConfig(object):
             code = compile(code, snakefile, 'exec')
             try:
                 exec(code, globals_copy)
-            except AttributeError as e:
+            except Exception as e:
                 # in the case of required parser arguments, we may get some type
                 # of exception
                 #if not str(e).startswith("'Namespace'"):
