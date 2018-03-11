@@ -15,7 +15,7 @@ The command line utility can be run with :code:`snakeparse`
 Conda Recipe
 ============
 
-See the `conda-recipe https://github.com/nh13/snakeparse/tree/conda-recipe`_ branch and the following `pull-request <https://github.com/bioconda/bioconda-recipes/pull/8229>` into bioconda.
+See the `conda-recipe <https://github.com/nh13/snakeparse/tree/conda-recipe>`_ branch and the following `pull-request <https://github.com/bioconda/bioconda-recipes/pull/8229>` into bioconda.
 
 Testing
 =======

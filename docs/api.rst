@@ -19,6 +19,9 @@ Contents:
 - :class:`~snakeparse.api.SnakeParseException`
 - :func:`~snakeparse.parser.argparser`
 
+.. automodule:: snakeparse.api
+   :members:
+
 .. autoclass:: snakeparse.api.SnakeParse
     :members:
 

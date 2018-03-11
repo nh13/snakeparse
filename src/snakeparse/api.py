@@ -1,6 +1,8 @@
 # Author: Nils Homer <nilshomer@gmail.com>.
 
-'''Command-line parsing library for Snakemake
+'''
+Snakeparse: command-line parsing library for Snakemake
+------------------------------------------------------
 
 This module allows multiple Snakemake workflows to be combined into one command
 line interface.  Arguments to Snakemake and workflow-specific arguments are
@@ -15,6 +17,9 @@ This module is inspired by tool-chains like fgbio, Picard, and samtools, that:
       tools; in this case, arugenets for Snakemake.
 
 The following is a minimumal usage example for how to use the API:
+
+.. code-block:: python
+
     SnakeParse(args=sys.argv[1:]).run()
 
 The magic comes from creating a configuration object ('SnakeParseConfig') that
@@ -23,26 +28,30 @@ associated SnakeParse files live, as well as various options for how workflows
 are displayed on the command line.  Once the configuration object has been
 created, it's as simple as:
 
+.. code-block:: python
+
     SnakeParse(args=sys.argv[1:], config=config)
 
 The given arguments may contain the argument separator '--'.  All arguments
 prior will be passed to Snakemake, while all arguments after will be passed to
 the specified workflow.  Which workflow to run is determined as follows:
 
-    1. If the argument separator is present, then if there is only one workflow
-        configured, use that one, otherwise, assume the name of the workflow is
-        specified immediate after the argument separator.
-    2. If the argument separator is not present, search for the first argument
-        that matches a known workflow name.
+1. If the argument separator is present, then if there is only one workflow
+   configured, use that one, otherwise, assume the name of the workflow is
+   specified immediate after the argument separator.
+2. If the argument separator is not present, search for the first argument
+   that matches a known workflow name.
 
-If no workflows are configured, but the '-s/--snakefile' option is given before
+If no workflows are configured, but the :code:`-s/--snakefile` option is given before
 the argument separator, then this workflow is added to the list of workflows,
 and that workflow will be executed.
 
 For a more typical example, suppose the path to the the snakefiles is
-'~/snakemake-workflows', and that for each snakefile, a corresponding
+:code:`~/snakemake-workflows`, and that for each snakefile, a corresponding
 SnakeParse file exists in the same directory but with extension from the
-snakefile replaced with '_snakeparser.py'.  Then the following will work:
+snakefile replaced with :code:`_snakeparser.py`.  Then the following will work:
+
+.. code-block:: python
 
    config = SnakeParseConfig(snakefile_globs='~/snakemake-workflows/*')
    SnakeParse(args=sys.argv[1:], config=config).run()
@@ -52,14 +61,21 @@ a single required command line option '--message' that takes a message to be
 printed.
 
 For running a single workflow:
+
+.. code-block:: python
+
    args = ['--snakefile', '/path/to/snakefile', '--', '--message', 'Hello!']
 
 If a single workflow has been added via SnakeParseConfig object:
+
+.. code-block:: python
 
    args = ['Example', '--message', 'Hello!']
 
 Alternatively, the workflow name can be omitted when only one workflow has been
 configured:
+
+.. code-block:: python
 
    args = ['--', '--message', 'Hello!']
 
@@ -67,22 +83,26 @@ If multiple workflows are configured, then the name must be explictly used.
 
 In some cases, the options to Snakemake take multiple values, so it is ambiguous
 where the arguments to Snakemake end and the arguments to the workflow begin.
-Use the '--' argument to explicitly seperate the two lists.  The workflow name
-should be immediately after the '--' seperator:
+Use the :code:`--`` argument to explicitly seperate the two lists.  The workflow name
+should be immediately after the :code:`--` seperator:
+
+.. code-block:: python
 
     args = ['--force-run', 'rule-1', 'rule-2', '--', 'Example', '--message', 'Hello!']]
 
-In the above example, the arguments ['--force-run', 'rule-1', 'rule-2'] are
-passed to Snakemake, while the arguments ['--message', 'Hello!'] are passed to
+In the above example, the arguments :code:`['--force-run', 'rule-1', 'rule-2']` are
+passed to Snakemake, while the arguments :code:`['--message', 'Hello!']` are passed to
 the SnakeParser for the Example workflow.
 
 Ther are two ways for your snakefile source to receive the parsed arguments: (1)
 define a concrete subclass of SnakeParse, or (2) define a method
-'snakeparser(**kwargs)' that returns a concrete sub-class of SnakeParse.  For
+:code:`snakeparser(**kwargs)` that returns a concrete sub-class of SnakeParse.  For
 convenience when implementing parsing using the argparse module, the class
 snakeparse.api.SnakeArgumentParser can be used for (1), while the method
 snakeparse.api.argparser can be used for (2).  For the Example workflow above,
 an example implementation with a concrete class definition is as follows:
+
+.. code-block:: python
 
     from snakeparse.api import SnakeArgumentParser
     class Parser(SnakeArgumentParser):
@@ -92,6 +112,8 @@ an example implementation with a concrete class definition is as follows:
 
 Alternatively, a method can be defined in 'example_snakeparser.py'
 
+.. code-block:: python
+
     from snakeparse.parser import argparser
     def snakeparser(**kwargs):
         p = argparser(**kwargs)
@@ -100,31 +122,31 @@ Alternatively, a method can be defined in 'example_snakeparser.py'
 
 The module contains the following public classes:
 
-    - SnakeParser -- The abstract base class that implements the workflow
+    - :class:`~snakeparse.api.SnakeParser` -- The abstract base class that implements the workflow
         specific argument parsing.  This parser will be invoked by SnakeParse
         prior to running Snakemake, to ensure that the command line arguments
         are specified correctly.  This parser is likely also used in the
         Snakemake file to re-instantiate the parsed arguments.
 
-    - SnakeArgumentParser -- The abstract base class to help argument parsers
+    - :class:`~snakeparse.api.SnakeArgumentParser` -- The abstract base class to help argument parsers
         that use python's argparse module.
 
-    - SnakeParseException -- The exception raised by this module.
+    - :class:`~snakeparse.api.SnakeParseException` -- The exception raised by this module.
 
-    - SnakeParseWorkflow -- A container class for basic meta information about
+    - :class:`~snakeparse.api.SnakeParseWorkflow` -- A container class for basic meta information about
         a supported workflow, including to but not limited to the name dispalyed
         on the command line, the paths to the snakefile and SnakeParse file, a
         workflow group to which this workflow belongs, and a short description
         to display on the commad line.
 
-    - SnakeParseConfig -- The class used to configure SnakeParse.  In
+    - :class:`~snakeparse.api.SnakeParseConfig` -- The class used to configure SnakeParse.  In
         particular, where workflows are located (if they are to be discovered),
         definitions for the workflow (if they are to be explicitly defined),
         where SnakeParse files live (either generally or relative to the
         Snakemake files), the names of the workflow groups, and other
         miscellaneous options.
 
-    - SnakeParse -- The main entry point for command-line parsing for Snakemake.
+    - :class:`~snakeparse.api.SnakeParse` -- The main entry point for command-line parsing for Snakemake.
         The configuration for SnakeParse will be optionally loaded, then the
         workflow to run will be parsed, then the workflow arguments will be
         parsed, and finally the workflow will be run along with all the
@@ -199,7 +221,7 @@ class SnakeParser(ABC):
     def parse_config(self, config: dict) -> Any:
         '''Parses arguments from a Snakemake config object.  It is assumed the
         arguments are contained in an arguments file, whose path is stored in
-        the config with key SnakeParse.ARGUMENT_FILE_NAME_KEY.'''
+        the config with key :code:`SnakeParse.ARGUMENT_FILE_NAME_KEY`.'''
         args_file = config[SnakeParse.ARGUMENT_FILE_NAME_KEY]
         if args_file is not None:
             args_file = Path(config[SnakeParse.ARGUMENT_FILE_NAME_KEY])

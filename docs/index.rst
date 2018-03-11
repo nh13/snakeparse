@@ -9,7 +9,7 @@ Snakeparse
 Making `Snakemake <https://bitbucket.org/snakemake/snakemake>`_ workflows into full-fledged command line tools since 1999.
 
 Documentation Contents
-========
+======================
 
 .. toctree::
    :maxdepth: 1
@@ -41,8 +41,6 @@ To install the latest release, type::
     python setup.py install
 
 See the :ref:`Installation notes <installation>` for details.
-
-.. _installation
 
 Indices and tables
 ------------------
