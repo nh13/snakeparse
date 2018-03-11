@@ -52,7 +52,7 @@ If you forget to add the correct key/value pairs with the :code:`--config` optio
 At that point, you're out of luck to see all the various required and optional config key/value pairs without examining the snakefile (i.e. you want to see a help message).
 Have fun adding each configuration option one-by-one and gleaning their meaning.
 Even examining the source, there needs to be clear documentation within your snakefile for each argument for the user to examine.
-Why can't we just use `argparse <https://docs.python.org/3/library/argparse.html>` as we normally would for our command-line python scripts?
+Why can't we just use `argparse <https://docs.python.org/3/library/argparse.html>`_ as we normally would for our command-line python scripts?
 
 Furthermore, if you have multiple snakefiles, setting the :code:`--config` key/value pairs can get quite painful, notwithstanding the fact you need to specify the path to the specific snakefile your interested in each time.
 Why can't we put all the snakefiles in one place, and have an easy way to specify which to run on the command line?
@@ -101,13 +101,13 @@ Snakeparse Command Line Execution
 
 You can run the installed :code:`snakeparse` utility as follows:
 
-.. code-block:: python
+.. code-block:: bash
 
     snakeparse --snakefile examples/argparse/method/write_message.smk -- --message 'Hello World!'`
 
 or
 
-.. code-block:: python
+.. code-block:: bash
 
     snakeparse --snakefile-globs examples/argparse/method/*smk -- WriteMessage --message 'Hello World!'`
 
@@ -115,6 +115,7 @@ Programmatic Execution
 ~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
+
     config = SnakeParseConfig(snakefile_globs='~/examples/argparse/method/*smk')
     SnakeParse(args=sys.argv[1:], config=config).run()
 
