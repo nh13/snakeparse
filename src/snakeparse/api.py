@@ -888,10 +888,11 @@ class SnakeParse(object):
 
         # Pre-amble
         self.file.write("Usage: " + self._usage_short() + '\n')
-        self.file.write(f'Version: {__version__}\n\n')
+        self.file.write(f'Version: {__version__}\n')
 
         # SnakeParse help
         if self._config_usage:
+            self.file.write('\n')
             SnakeParseConfig.config_parser().print_help(suppress=False, file=self.file)
 
         # Print the workflows, grouped by group.
