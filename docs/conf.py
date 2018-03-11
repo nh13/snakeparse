@@ -15,8 +15,9 @@ import sys, os, glob
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-_libdir = "../build/lib.%s-%s-%s.%s" % (os.uname()[0].lower(), os.uname()[4],
-                                        sys.version_info[0], sys.version_info[1])
+#_libdir = "../build/lib.%s-%s-%s.%s" % (os.uname()[0].lower(), os.uname()[4],
+#                                        sys.version_info[0], sys.version_info[1])
+_libdir = "../build/lib"
 if os.path.exists(_libdir):
     sys.path.insert(0, os.path.abspath(_libdir))
 
@@ -47,7 +48,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'snakeparse'
-copyright = u'2108, Nils Homer'
+copyright = u'2018, Nils Homer'
 
 # Included at the end of each rst file
 rst_epilog = '''

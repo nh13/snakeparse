@@ -44,9 +44,9 @@ Consider this simple Snakemake file (snakefile) that has a required configuratio
 
 You would need to run snakemake with the :code:`--config` option:
 
-.. code-block:: bash
+.. code-block:: shell-session
 
-    snakemake --snakefile </path/to/snakefile> --config message='Hello World!'
+    $ snakemake --snakefile </path/to/snakefile> --config message='Hello World!'
 
 If you forget to add the correct key/value pairs with the :code:`--config` option, you'll get a :code:`KeyError` exception, which is not user-friendly to non-programmers.
 At that point, you're out of luck to see all the various required and optional config key/value pairs without examining the snakefile (i.e. you want to see a help message).
@@ -101,15 +101,15 @@ Snakeparse Command Line Execution
 
 You can run the installed :code:`snakeparse` utility as follows:
 
-.. code-block:: bash
+.. code-block:: shell-session
 
-    snakeparse --snakefile examples/argparse/method/write_message.smk -- --message 'Hello World!'`
+    $ snakeparse --snakefile examples/argparse/method/write_message.smk -- --message 'Hello World!'`
 
 or
 
-.. code-block:: bash
+.. code-block:: shell-session
 
-    snakeparse --snakefile-globs examples/argparse/method/*smk -- WriteMessage --message 'Hello World!'`
+    $ snakeparse --snakefile-globs examples/argparse/method/*smk -- WriteMessage --message 'Hello World!'`
 
 Programmatic Execution
 ~~~~~~~~~~~~~~~~~~~~~~

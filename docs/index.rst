@@ -51,8 +51,6 @@ Contents:
 * :ref:`modindex`
 * :ref:`search`
 
-.. _references
-
 References
 ----------
 

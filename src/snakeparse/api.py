@@ -20,19 +20,19 @@ The following is a minimumal usage example for how to use the API:
 
 .. code-block:: python
 
-    SnakeParse(args=sys.argv[1:]).run()
+    >>> SnakeParse(args=sys.argv[1:]).run()
 
-The magic comes from creating a configuration object ('SnakeParseConfig') that
-configures the paths to where the Snakemake files (snakefiles) and optionally
-associated SnakeParse files live, as well as various options for how workflows
-are displayed on the command line.  Once the configuration object has been
-created, it's as simple as:
+The magic comes from creating a configuration object
+(:class:`~snakeparse.api.SnakeParseConfig`) that configures the paths to where
+the Snakemake files (snakefiles) live, as well as various options for how
+workflows are displayed on the command line.  Once the configuration object has
+been created, it's as simple as:
 
 .. code-block:: python
 
-    SnakeParse(args=sys.argv[1:], config=config)
+    >>> SnakeParse(args=sys.argv[1:], config=config)
 
-The given arguments may contain the argument separator '--'.  All arguments
+The given arguments may contain the argument separator ``--``.  All arguments
 prior will be passed to Snakemake, while all arguments after will be passed to
 the specified workflow.  Which workflow to run is determined as follows:
 
@@ -42,83 +42,84 @@ the specified workflow.  Which workflow to run is determined as follows:
 2. If the argument separator is not present, search for the first argument
    that matches a known workflow name.
 
-If no workflows are configured, but the :code:`-s/--snakefile` option is given before
+If no workflows are configured, but the ``-s/--snakefile`` option is given before
 the argument separator, then this workflow is added to the list of workflows,
 and that workflow will be executed.
 
 For a more typical example, suppose the path to the the snakefiles is
-:code:`~/snakemake-workflows`, and that for each snakefile, a corresponding
-SnakeParse file exists in the same directory but with extension from the
-snakefile replaced with :code:`_snakeparser.py`.  Then the following will work:
+``~/snakemake-workflows``, then the following will work:
 
 .. code-block:: python
 
-   config = SnakeParseConfig(snakefile_globs='~/snakemake-workflows/*')
-   SnakeParse(args=sys.argv[1:], config=config).run()
+   >>> config = SnakeParseConfig(snakefile_globs='~/snakemake-workflows/*')
+   >>> SnakeParse(args=sys.argv[1:], config=config).run()
 
-Below are some example argument lists.  Suppose the workflow named 'Example' has
-a single required command line option '--message' that takes a message to be
+Below are some example argument lists.  Suppose the workflow named ``Example`` has
+a single required command line option ``--message`` that takes a message to be
 printed.
 
 For running a single workflow:
 
 .. code-block:: python
 
-   args = ['--snakefile', '/path/to/snakefile', '--', '--message', 'Hello!']
+   >>> args = ['--snakefile', '/path/to/snakefile', '--', '--message', 'Hello!']
 
-If a single workflow has been added via SnakeParseConfig object:
+If a single workflow has been added via
+:class:`~snakeparse.api.SnakeParseConfig` object:
 
 .. code-block:: python
 
-   args = ['Example', '--message', 'Hello!']
+   >>> args = ['Example', '--message', 'Hello!']
 
 Alternatively, the workflow name can be omitted when only one workflow has been
 configured:
 
 .. code-block:: python
 
-   args = ['--', '--message', 'Hello!']
+   >>> args = ['--', '--message', 'Hello!']
 
 If multiple workflows are configured, then the name must be explictly used.
 
 In some cases, the options to Snakemake take multiple values, so it is ambiguous
 where the arguments to Snakemake end and the arguments to the workflow begin.
-Use the :code:`--`` argument to explicitly seperate the two lists.  The workflow name
-should be immediately after the :code:`--` seperator:
+Use the ``--`` argument to explicitly seperate the two lists.  The workflow name
+should be immediately after the ``--`` seperator:
 
 .. code-block:: python
 
-    args = ['--force-run', 'rule-1', 'rule-2', '--', 'Example', '--message', 'Hello!']]
+    >>> args = ['--force-run', 'rule-1', 'rule-2', '--', 'Example', '--message', 'Hello!']]
 
-In the above example, the arguments :code:`['--force-run', 'rule-1', 'rule-2']` are
-passed to Snakemake, while the arguments :code:`['--message', 'Hello!']` are passed to
+In the above example, the arguments ``['--force-run', 'rule-1', 'rule-2']`` are
+passed to Snakemake, while the arguments ``['--message', 'Hello!']`` are passed to
 the SnakeParser for the Example workflow.
 
 Ther are two ways for your snakefile source to receive the parsed arguments: (1)
-define a concrete subclass of SnakeParse, or (2) define a method
-:code:`snakeparser(**kwargs)` that returns a concrete sub-class of SnakeParse.  For
-convenience when implementing parsing using the argparse module, the class
-snakeparse.api.SnakeArgumentParser can be used for (1), while the method
-snakeparse.api.argparser can be used for (2).  For the Example workflow above,
-an example implementation with a concrete class definition is as follows:
+define a concrete subclass of :class:`~snakeparse.api.SnakeParse`, or (2) define
+a method ``snakeparser(**kwargs)`` that returns a concrete sub-class of
+:class:`~snakeparse.api.SnakeParse`.  For convenience when implementing parsing
+using the argparse module, the class
+:class:`~snakeparse.api.SnakeArgumentParser` can be used for (1), while the
+method :func:`~snakeparse.parser.argparser` can be used for (2).  For the
+``Example`` workflow above, an example implementation with a concrete class
+definition is as follows:
 
 .. code-block:: python
 
-    from snakeparse.api import SnakeArgumentParser
-    class Parser(SnakeArgumentParser):
-        def __init__(self, **kwargs):
-            super().__init__(**kwargs)
-            self.parser.add_argument('--message', help='The message.', required=True)
+    >>> from snakeparse.api import SnakeArgumentParser
+    >>> class Parser(SnakeArgumentParser):
+    ...    def __init__(self, **kwargs):
+    ...        super().__init__(**kwargs)
+    ...        self.parser.add_argument('--message', help='The message.', required=True)
 
 Alternatively, a method can be defined in 'example_snakeparser.py'
 
 .. code-block:: python
 
-    from snakeparse.parser import argparser
-    def snakeparser(**kwargs):
-        p = argparser(**kwargs)
-        p.parser.add_argument('--message', help='The message.', required=True)
-        return p
+    >>> from snakeparse.parser import argparser
+    >>> def snakeparser(**kwargs):
+    ...    p = argparser(**kwargs)
+    ...    p.parser.add_argument('--message', help='The message.', required=True)
+    ...    return p
 
 The module contains the following public classes:
 
@@ -127,25 +128,20 @@ The module contains the following public classes:
         prior to running Snakemake, to ensure that the command line arguments
         are specified correctly.  This parser is likely also used in the
         Snakemake file to re-instantiate the parsed arguments.
-
     - :class:`~snakeparse.api.SnakeArgumentParser` -- The abstract base class to help argument parsers
         that use python's argparse module.
-
     - :class:`~snakeparse.api.SnakeParseException` -- The exception raised by this module.
-
     - :class:`~snakeparse.api.SnakeParseWorkflow` -- A container class for basic meta information about
-        a supported workflow, including to but not limited to the name dispalyed
+        a supported workflow, including to but not limited to the name displayed
         on the command line, the paths to the snakefile and SnakeParse file, a
         workflow group to which this workflow belongs, and a short description
         to display on the commad line.
-
     - :class:`~snakeparse.api.SnakeParseConfig` -- The class used to configure SnakeParse.  In
         particular, where workflows are located (if they are to be discovered),
         definitions for the workflow (if they are to be explicitly defined),
         where SnakeParse files live (either generally or relative to the
         Snakemake files), the names of the workflow groups, and other
         miscellaneous options.
-
     - :class:`~snakeparse.api.SnakeParse` -- The main entry point for command-line parsing for Snakemake.
         The configuration for SnakeParse will be optionally loaded, then the
         workflow to run will be parsed, then the workflow arguments will be
@@ -172,6 +168,7 @@ from .version import __version__
 import shutil
 import subprocess
 import snakemake.parser as snakemake_parser
+from io import TextIOWrapper
 
 
 class _ArgumentParser(argparse.ArgumentParser):
@@ -221,7 +218,7 @@ class SnakeParser(ABC):
     def parse_config(self, config: dict) -> Any:
         '''Parses arguments from a Snakemake config object.  It is assumed the
         arguments are contained in an arguments file, whose path is stored in
-        the config with key :code:`SnakeParse.ARGUMENT_FILE_NAME_KEY`.'''
+        the config with key ``SnakeParse.ARGUMENT_FILE_NAME_KEY``.'''
         args_file = config[SnakeParse.ARGUMENT_FILE_NAME_KEY]
         if args_file is not None:
             args_file = Path(config[SnakeParse.ARGUMENT_FILE_NAME_KEY])
@@ -297,14 +294,17 @@ class SnakeParseWorkflow(object):
     '''A container class for basic meta information about a workflow to be
     included on the command line.
 
-    Keyword Arguments:
-        - name -- The canonical name of the workflow displayed on the command
-            line.
-        - snakefile -- The path to the snakefile file.
-        - group -- The name of the workflow group, used to group workflows on
-            the command line.
-        - description - A short description of the workflow, used when listing
-            the workflows.
+    Keyword Arguments
+    -----------------
+    name : str
+        The canonical name of the workflow displayed on the command line.
+    snakefile : Optional[str]
+        The path to the snakefile file.
+    group : (Optional[str]):
+        The name of the workflow group, used to group workflows on the command
+        line.
+    description : Optional[str]
+        A short description of the workflow, used when listing the workflows.
     '''
 
     def __init__(self,
@@ -323,46 +323,54 @@ class SnakeParseWorkflow(object):
 class SnakeParseConfig(object):
     '''The class used to configure SnakeParse.
 
-    Keyword Arguments:
-        - config_path -- The path to the SnakeParse configuration file, in JSON,
-            YAML, or HOCON format.  Details of its contents are described below.
-        - prog -- The name of the tool-chain.
-        - snakemake -- the optional path to the Snakemake executable.
-        - name_transform -- An optional method to transform the basename of a
-            workflow's snakefile to the canonical name to use on the command
-            line.
-        - parent_dir_is_group_name -- True to use the parent directory of the
-            workflow's snakefile as the workflow's group name.  Only applied
-            when searching directories for snakefiles, or when group name is not
-            explicitly given.
-        - workflows -- optionally, the list of workflows as
-            SnakeParseWorkflow objects.
-        - groups - optionally, one or more key-value pairs, with the key being
-            the canonical workflow group name, and the value being a
-            description for that group to display on the command line.
-        - snakefile_globs -- optionally, or more glob strings specifying
-            where snakefile files can be found.
+    Keyword Arguments
+    -----------------
+    config_path : Optional[Path]
+        The path to the SnakeParse configuration file, in JSON, YAML, or HOCON
+        format.  Details of its contents are described below.
+    prog : str
+        The name of the tool-chain.
+    snakemake : Optional[Path]
+        The optional path to the Snakemake executable.
+    name_transform
+        An optional method to transform the basename of a workflow's snakefile
+        to the canonical name to use on the command line.
+    parent_dir_is_group_name : bool
+        True to use the parent directory of the workflow's snakefile as the
+        workflow's group name.  Only applied when searching directories for
+        snakefiles, or when group name is not explicitly given.
+    workflows : Dict[str, 'SnakeParseWorkflow']
+        Optionally, the list of workflows as SnakeParseWorkflow objects.
+    groups : Dict[str, str]
+        Optionally, one or more key-value pairs, with the key being the
+        canonical workflow group name, and the value being a description for
+        that group to display on the command line.
+    snakefile_globs : Optional[List[str]]
+        Optionally, or more glob strings specifying where snakefile files can be
+        found.
+
 
     NB: the values in the configuration file take precedence over the keyword
     arguments.  In particular, the configuration file may override Worfklows
     given in the 'workflows' keyword argument.
 
-    Configuration paths (in HOCON paths):
+    The following are configuration paths (in HOCON paths) allowed in the
+    configuration file:
 
         - snakemake -- the optional path to the Snakemake executable.
         - prog -- the optional name of the tool-chain.
         - name_transform -- alias for a built-in method to produce the
-            workflow's name (see the similarly named keyword argument). Either
-            'snake_to_camel' or 'camel_to_snake' for converting from Snake case
-            to Camel case, or vice versa.
+          workflow's name (see the similarly named keyword argument). Either
+          'snake_to_camel' or 'camel_to_snake' for converting from Snake case
+          to Camel case, or vice versa.
         - parent_dir_is_group_name -- optional; see the similarly named
-            keyword argument.
+          keyword argument.
         - workflows -- optionally, a list of configuration objects, one per
-            workflow specified.  They object key should be the canonical
-            workflow name to be displayed on the command line, with a dictionary
-            of key value pairs specifying the wofklow configuration with the
-            same names as SnakeParseWorkflow (snakefile, group, and
-            description).  Only the snakefile key-value pair is required.
+          workflow specified.  They object key should be the canonical
+          workflow name to be displayed on the command line, with a dictionary
+          of key value pairs specifying the wofklow configuration with the
+          same names as SnakeParseWorkflow (snakefile, group, and
+          description).  Only the snakefile key-value pair is required.
         - groups - optional; see the similarly named keyword argument.
         - snakefile_globs -- optional; see the similarly named keyword argument.
     '''
@@ -370,7 +378,7 @@ class SnakeParseConfig(object):
     def __init__(self,
                  config_path: Optional[Path]=None,
                  prog: str=None,
-                 snakemake: Path=None,
+                 snakemake: Optional[Path]=None,
                  name_transform=None,
                  parent_dir_is_group_name: bool=True,
                  workflows: Dict[str, 'SnakeParseWorkflow'] = OrderedDict(),
@@ -534,14 +542,14 @@ class SnakeParseConfig(object):
 
     def add_group(self, name: str, description: str, strict: bool = True) -> 'SnakeParseConfig':
         '''Adds a new group with the given name and description.  If strict is
-        True, then no group with the same name should already exist. '''
+        ``True``, then no group with the same name should already exist. '''
         if strict and name in self.groups:
             raise SnakeParseException(f"Group '{name}' already defined")
         self.groups[name] = description
         return self
 
     @staticmethod
-    def name_transfrom_from(key):
+    def name_transfrom_from(key) -> None:
         '''Returns the built-in method to format the workflow's name.  Should be
         either 'snake_to_camel' or 'camel_to_snake' for converting from Snake case
         to Camel case, or vice versa.
@@ -630,7 +638,7 @@ class SnakeParseConfig(object):
 
     @staticmethod
     def config_parser(usage = argparse.SUPPRESS) -> argparse.ArgumentParser:
-        '''Returns an argparse.ArgumentParser for the configuration options'''
+        '''Returns an :class:`~argparse.ArgumentParser` for the configuration options'''
 
         # An argument parser that doesn't exit
         class _ConfigParser(_ArgumentParser):
@@ -667,11 +675,16 @@ class SnakeParseConfig(object):
 class SnakeParse(object):
     '''The main entry point for command-line parsing for Snakemake.
 
-    Keyword Arguments:
-        - args -- The list of command line arguments.
-        - config -- Optionally a SnakeParse configuration object.
-        - prog -- Optionally the name of the tool-chain to display in the usage.
-        - file -- Optionally the file to write any error or help messages, defaults to sys.stdout.
+    Keyword Arguments
+    -----------------
+    args : List[str]
+        The list of command line arguments.
+    config : Optional['SnakeParseConfig']
+        Optionally a SnakeParse configuration object.
+    debug : bool
+        Print extra debuggin information in the parser's help message.
+    file : TextIOWrapper
+        The file to write any error or help messages, defaults to sys.stdout.
     '''
 
     '''The default key to use in Snakemake's config dictionary.'''
@@ -681,7 +694,7 @@ class SnakeParse(object):
                  args: List[str]=[],
                  config: Optional['SnakeParseConfig']=None,
                  debug: bool = False,
-                 file = sys.stdout):
+                 file: TextIOWrapper = sys.stdout):
         self.config = config
         self.debug  = debug
         self.file   = file
@@ -695,8 +708,8 @@ class SnakeParse(object):
         If no config was given, try parsing the args.
         ------------------------------------------------------------------------
         First check to see if the config file specifies them, otherwise search
-        the args for the '-s/--snakefile' argument (must be before any
-        occurrence of '--').  Next check if the workflow name is after the '--'.
+        the args for the ``-s/--snakefile`` argument (must be before any
+        occurrence of ``--``).  Next check if the workflow name is after the ``--``.
         '''
         if self.config is None:
             # Dummy value in case a usage is needed.
@@ -728,7 +741,7 @@ class SnakeParse(object):
 
             # Remove the arguments used by snakeparse
             args  = remaining_args
-            debug = config_args.extra_help
+            self.debug = debug or config_args.extra_help
 
         assert self.config is not None
 
@@ -827,7 +840,7 @@ class SnakeParse(object):
         if not has_snakefile_argument:
             self.snakemake_args.extend(['--snakefile', str(self.workflow.snakefile.resolve())])
 
-    def run(self):
+    def run(self) -> None:
         '''Execute the Snakemake workflow'''
         snakemake = self.config.snakemake if self.config.snakemake else 'snakemake'
         retcode = subprocess.call([snakemake] + self.snakemake_args)
@@ -886,13 +899,13 @@ class SnakeParse(object):
             end += 1
         return end, namespace
 
-    def _usage_short(self, workflow_name=None):
+    def _usage_short(self, workflow_name=None) -> str:
         prog = self.config.prog if self.config is not None and self.config.prog is not None else "snakeparse"
         return self.usage_short(prog=prog, workflow_name=workflow_name)
 
     @staticmethod
-    def usage_short(prog="snakeparse", workflow_name=None):
-        '''A one line usage to dispaly at the top of any usage or help message.'''
+    def usage_short(prog="snakeparse", workflow_name=None) -> str:
+        '''A one line usage to display at the top of any usage or help message.'''
         if workflow_name is None:
             workflow_name = '[workflow name]'
         return f'{prog} [snakeparse options] [snakemake options] {workflow_name} [workflow options]'.lstrip(' ')
