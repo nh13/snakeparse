@@ -2,6 +2,7 @@
 [![codecov](https://codecov.io/gh/nh13/snakeparse/branch/master/graph/badge.svg)](https://codecov.io/gh/nh13/snakeparse)
 [![License](http://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/nh13/snakeparse/blob/master/LICENSE)
 [![Language](http://img.shields.io/badge/language-python-brightgreen.svg)](http://www.python.org/)
+[![Documentation Status](https://readthedocs.org/projects/snakeparse/badge/?version=latest)](http://snakeparse.readthedocs.io/en/latest/?badge=latest)
 
 Snakeparse
 ====
