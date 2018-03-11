@@ -673,7 +673,8 @@ class SnakeParse(object):
         '''
         if self.config is None:
             # Dummy value in case a usage is needed.
-            self.config = SnakeParseConfig()
+            self.config        = SnakeParseConfig()
+            self._config_usage = True # output the usage for SnakeParseConfig
 
             # parse the leading arguments until an unknonwn argument is found or no more
             # arguments exist.  Prepend an arg for argparse to work.
@@ -886,7 +887,8 @@ class SnakeParse(object):
         self.file.write(f'Version: {__version__}\n\n')
 
         # SnakeParse help
-        SnakeParseConfig.config_parser().print_help(suppress=False, file=self.file)
+        if self._config_usage:
+            SnakeParseConfig.config_parser().print_help(suppress=False, file=self.file)
 
         # Print the workflows, grouped by group.
         if self.config.workflows:
