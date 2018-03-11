@@ -20,7 +20,7 @@ Making [Snakemake](https://bitbucket.org/snakemake/snakemake) workflows into ful
 
 ## Demo
 
-![Snakeparse Demo](https://github.com/nh13/snakeparse/blob/src/docs/snakeparse-demo.gif)
+![Snakeparse Demo](https://github.com/nh13/snakeparse/blob/master/docs/snakeparse-demo.gif)
 
 ## Installation
 
