@@ -664,6 +664,11 @@ class SnakeParse(object):
         self.debug  = debug
         self.file   = file
 
+
+        # sets whether or not to output the SnakeParseConfig usage as part of the general
+        # usage
+        self._config_usage = config is None
+
         '''
         If no config was given, try parsing the args.
         ------------------------------------------------------------------------
@@ -674,7 +679,6 @@ class SnakeParse(object):
         if self.config is None:
             # Dummy value in case a usage is needed.
             self.config        = SnakeParseConfig()
-            self._config_usage = True # output the usage for SnakeParseConfig
 
             # parse the leading arguments until an unknonwn argument is found or no more
             # arguments exist.  Prepend an arg for argparse to work.
