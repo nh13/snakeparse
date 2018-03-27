@@ -116,12 +116,12 @@ Programmatic Execution
 
 .. code-block:: python
 
-    config = SnakeParseConfig(snakefile_globs='~/examples/argparse/method/*smk')
-    SnakeParse(args=sys.argv[1:], config=config).run()
+    >>> config = SnakeParseConfig(snakefile_globs='~/examples/argparse/method/*smk')
+    >>> SnakeParse(args=sys.argv[1:], config=config).run()
 
 or alternatively :code:`SnakeParse` accepts leading configuration arguments:
 
 .. code-block:: python
 
-    args = ['--snakefile-globs', '~/examples/argparse/method/*smk'] + sys.argv[1:]
-    SnakeParse(args=args, config=config).run()
+    >>> args = ['--snakefile-globs', '~/examples/argparse/method/*smk'] + sys.argv[1:]
+    >>> SnakeParse(args=args, config=config).run()
