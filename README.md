@@ -36,7 +36,7 @@ The command line utility can be run with `snakeparse`
 
 ## Conda Recipe
 
-See the [conda-recipe](https://github.com/nh13/snakeparse/tree/conda-recipe) branch.
+See the recipe on [Bioconda](http://bioconda.github.io/recipes/snakeparse/README.html).
 
 ## Documentation
 

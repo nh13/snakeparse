@@ -57,6 +57,7 @@ rst_epilog = '''
 .. _python: http://python.org/
 .. _conda: https://conda.io/docs/
 .. _bioconda: https://bioconda.github.io/
+.. _conda-recipe: http://bioconda.github.io/recipes/snakeparse/README.html
 '''
 
 autosummary_generate = True
