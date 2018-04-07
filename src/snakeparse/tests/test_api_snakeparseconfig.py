@@ -2,10 +2,12 @@ import unittest
 from pathlib import Path
 import tempfile
 from snakeparse.api import SnakeParseConfig, SnakeParseException, SnakeParseWorkflow
+from typing import Tuple
+
 
 class SnakeParseConfigTest(unittest.TestCase):
 
-    def setUp(self):
+    def setUp(self) -> None:
         self.snake_and_camel = [
             ('snake', 'Snake'),
             ('snake_case', 'SnakeCase'),
@@ -14,7 +16,7 @@ class SnakeParseConfigTest(unittest.TestCase):
 
     ''' Tests for static methods '''
 
-    def test_name_transfrom_from(self):
+    def test_name_transfrom_from(self) -> None:
         self.assertIsNone(SnakeParseConfig.name_transfrom_from(key=None))
 
         f = SnakeParseConfig.name_transfrom_from(key='snake_to_camel')
@@ -26,29 +28,34 @@ class SnakeParseConfigTest(unittest.TestCase):
         with self.assertRaises(SnakeParseException):
             SnakeParseConfig.name_transfrom_from(key='not_a_key')
 
-    def test_snake_to_camel(self):
+    def test_snake_to_camel(self) -> None:
         f = SnakeParseConfig._snake_to_camel
         for snake, camel in self.snake_and_camel:
             self.assertEqual(f(snake), camel)
         self.assertEqual(f('snake_cAse'), 'SnakeCase')
 
-
-    def test_camel_to_snake(self):
+    def test_camel_to_snake(self) -> None:
         f = SnakeParseConfig._camel_to_snake
         for snake, camel in self.snake_and_camel:
             self.assertEqual(f(camel), snake)
         self.assertEqual(f('SnakeCAse'), 'snake_c_ase')
         self.assertEqual(f(''), '')
 
-    def _get_snakefile_and_workflow(self, snakefile_contents):
+    def _get_snakefile_and_workflow(self,
+                                    snakefile_contents: str) -> Tuple[Path, SnakeParseWorkflow]:
         with tempfile.NamedTemporaryFile('w', suffix='.smk', delete=False) as fh:
             fh.write(snakefile_contents)
             snakefile = Path(fh.name)
-        workflow = SnakeParseWorkflow(name='Workflow', snakefile=snakefile, group=None, description=None)
+        workflow = SnakeParseWorkflow(name='Workflow',
+                                      snakefile=snakefile,
+                                      group=None,
+                                      description=None)
         return (snakefile, workflow)
 
-    def _test_parser_from_helper(self, snakefile_contents):
-        snakefile, workflow = self._get_snakefile_and_workflow(snakefile_contents=snakefile_contents)
+    def _test_parser_from_helper(self, snakefile_contents: str) -> None:
+        snakefile, workflow = self._get_snakefile_and_workflow(
+            snakefile_contents=snakefile_contents
+        )
         parser = SnakeParseConfig.parser_from(workflow=workflow)
         args   = parser.parse_args(['--message', 'Hello World!'])
         self.assertEqual(args.message, 'Hello World!')
@@ -56,7 +63,7 @@ class SnakeParseConfigTest(unittest.TestCase):
             args = parser.parse_args(['--not-an-arg', 'Hello World!'])
         snakefile.unlink()
 
-    def test_parser_from_method(self):
+    def test_parser_from_method(self) -> None:
         ''' Tests a snakeparser method in the snakefile '''
         snakefile_contents = '''
 # Import the parser from snakeparse
@@ -81,7 +88,7 @@ rule message:
         '''
         self._test_parser_from_helper(snakefile_contents=snakefile_contents)
 
-    def test_config_parser_from_class(self):
+    def test_config_parser_from_class(self) -> None:
         ''' Tests a SnakeArgumentParser class in the snakefile '''
         snakefile_contents = '''
 # Import the parser from snakeparse
@@ -108,14 +115,14 @@ rule message:
         '''
         self._test_parser_from_helper(snakefile_contents=snakefile_contents)
 
-    def test_config_parser_no_methods_or_classes(self):
+    def test_config_parser_no_methods_or_classes(self) -> None:
         ''' Tests a failure when we have no parser in the snakefile '''
         snakefile, workflow = self._get_snakefile_and_workflow(snakefile_contents='')
         with self.assertRaises(SnakeParseException) as ex:
             SnakeParseConfig.parser_from(workflow=workflow)
         self.assertIn('Could not find either', str(ex.exception))
 
-    def test_config_parser_both_method_and_classes(self):
+    def test_config_parser_both_method_and_classes(self) -> None:
         ''' Tests a failure when we have multiple parsers in the snakefile '''
         imports = '''
 from snakeparse.parser import argparser
@@ -174,13 +181,17 @@ rule message:
             method_snakeparser + \
             '\nargs = snakeparser().parse_config(config=config)\n' + \
             rules
-        for snakefile_contents in [snakefile_contents_a, snakefile_contents_b, snakefile_contents_c]:
-            snakefile, workflow = self._get_snakefile_and_workflow(snakefile_contents=snakefile_contents)
+        for snakefile_contents in [snakefile_contents_a,
+                                   snakefile_contents_b,
+                                   snakefile_contents_c]:
+            snakefile, workflow = self._get_snakefile_and_workflow(
+                snakefile_contents=snakefile_contents
+            )
             with self.assertRaises(SnakeParseException) as ex:
                 SnakeParseConfig.parser_from(workflow=workflow)
             self.assertIn('Found', str(ex.exception))
 
-    def test_config_parser(self):
+    def test_config_parser(self) -> None:
         parser = SnakeParseConfig.config_parser()
 
         # test that it doesn't exit, but instead raises an error
@@ -196,7 +207,7 @@ rule message:
         args = parser.parse_args(args=[])
         self.assertIsNone(args.config)
 
-    def test_add_workflow(self):
+    def test_add_workflow(self) -> None:
         with tempfile.NamedTemporaryFile('w', suffix='.smk', delete=False) as fh:
             fh.write('')
             snakefile = Path(fh.name)
@@ -212,9 +223,9 @@ rule message:
             config.add_workflow(workflow=wf1)
         self.assertEqual(len(config.workflows), 2)
 
-    def test_add_snakefile(self):
-        with tempfile.TemporaryDirectory() as tempdir:
-            tempdir = Path(tempdir)
+    def test_add_snakefile(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir_str:
+            tempdir = Path(tempdir_str)
             # test adding more than one snakefile
             self.assertTrue(tempdir.exists())
             snakefile_a = tempdir / 'workflow_a.smk'
@@ -234,17 +245,21 @@ rule message:
                 config.add_snakefile(snakefile=snakefile_a)
 
             # test when name transform is set
-            config = SnakeParseConfig(name_transform=SnakeParseConfig.name_transfrom_from('snake_to_camel'))
+            config = SnakeParseConfig(
+                name_transform='snake_to_camel'
+            )
             config.add_snakefile(snakefile=snakefile_a)
             config.add_snakefile(snakefile=snakefile_b)
-            self.assertListEqual([wf.name for wf in config.workflows.values()], ['WorkflowA', 'Workflowb'])
+            self.assertListEqual([wf.name for wf in config.workflows.values()],
+                                 ['WorkflowA', 'Workflowb'])
 
-            config = SnakeParseConfig(name_transform=SnakeParseConfig.name_transfrom_from('camel_to_snake'))
+            config = SnakeParseConfig(name_transform='camel_to_snake')
             config.add_snakefile(snakefile=snakefile_a)
             config.add_snakefile(snakefile=snakefile_b)
-            self.assertListEqual([wf.name for wf in config.workflows.values()], ['workflow_a', 'workflow_b'])
+            self.assertListEqual([wf.name for wf in config.workflows.values()],
+                                 ['workflow_a', 'workflow_b'])
 
-    def test_add_group(self):
+    def test_add_group(self) -> None:
         config = SnakeParseConfig()
         # test adding more than one group
         config.add_group(name='G1', description='D1')

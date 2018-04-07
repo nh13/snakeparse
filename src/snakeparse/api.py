@@ -128,11 +128,11 @@ The module contains the following public classes:
         prior to running Snakemake, to ensure that the command line arguments
         are specified correctly.  This parser is likely also used in the
         Snakemake file to re-instantiate the parsed arguments.
-    - :class:`~snakeparse.api.SnakeArgumentParser` -- The abstract base class to help argument parsers
-        that use python's argparse module.
+    - :class:`~snakeparse.api.SnakeArgumentParser` -- The abstract base class to help argument
+        parsers that use python's argparse module.
     - :class:`~snakeparse.api.SnakeParseException` -- The exception raised by this module.
-    - :class:`~snakeparse.api.SnakeParseWorkflow` -- A container class for basic meta information about
-        a supported workflow, including to but not limited to the name displayed
+    - :class:`~snakeparse.api.SnakeParseWorkflow` -- A container class for basic meta information
+        about  a supported workflow, including to but not limited to the name displayed
         on the command line, the paths to the snakefile and SnakeParse file, a
         workflow group to which this workflow belongs, and a short description
         to display on the commad line.
@@ -142,8 +142,8 @@ The module contains the following public classes:
         where SnakeParse files live (either generally or relative to the
         Snakemake files), the names of the workflow groups, and other
         miscellaneous options.
-    - :class:`~snakeparse.api.SnakeParse` -- The main entry point for command-line parsing for Snakemake.
-        The configuration for SnakeParse will be optionally loaded, then the
+    - :class:`~snakeparse.api.SnakeParse` -- The main entry point for command-line parsing for
+        Snakemake. The configuration for SnakeParse will be optionally loaded, then the
         workflow to run will be parsed, then the workflow arguments will be
         parsed, and finally the workflow will be run along with all the
         Snakemake specific arguments.
@@ -151,24 +151,23 @@ The module contains the following public classes:
 All other classes in this module are considered implementation details.
 '''
 
-import os
-import sys
-import json
-import yaml
-import pyhocon
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
-from collections import OrderedDict
-import tempfile
-import importlib.util
-import inspect
 import argparse
-from abc import ABC, abstractmethod
-from .version import __version__
+import inspect
+import json
 import shutil
 import subprocess
+import sys
+import tempfile
+from abc import ABC, abstractmethod
+from collections import OrderedDict
+from pathlib import Path
+from typing import Any, Callable, Dict, IO, List, Optional, Sequence, Tuple
+
+import pyhocon
 import snakemake.parser as snakemake_parser
-from io import TextIOWrapper
+import yaml
+
+from .version import __version__
 
 
 class _ArgumentParser(argparse.ArgumentParser):
@@ -179,19 +178,19 @@ class _ArgumentParser(argparse.ArgumentParser):
         be displayed when snakeparse wishes.
     '''
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
-        self._optionals.title = 'Optional options'
+        self._optionals.title = 'Optional options'  # type: ignore
 
-    def print_help(self, file = None, suppress: bool = True):
+    def print_help(self, file: Optional[IO[str]]=None, suppress: bool=True) -> None:
         if not suppress:
             super().print_help(file=file)
 
-    def error(self, message: str):
+    def error(self, message: str) -> None:
         ''' Raises an SnakeParseException with the given message.'''
-        #self.print_help()
-        #self.file.write('\nerror: %s\n' % message)
-        #sys.exit(2)
+        # self.print_help()
+        # self.file.write('\nerror: %s\n' % message)
+        # sys.exit(2)
         raise SnakeParseException(message)
 
 
@@ -203,9 +202,9 @@ class SnakeParser(ABC):
     '''Character that prefix files containing additional arguments.'''
     FROMFILE_PREFIX_CHARS = '@'
 
-    def __init__(self, **kwargs):
-        self._group = None
-        self._description = None
+    def __init__(self) -> None:
+        self._group: Optional[str] = None
+        self._description: Optional[str] = None
 
     @abstractmethod
     def parse_args(self, args: List[str]) -> Any:
@@ -225,40 +224,40 @@ class SnakeParser(ABC):
             return self.parse_args_file(args_file=args_file)
         else:
             try:
-                return self.parse_args('')
+                return self.parse_args([''])
             except SnakeParseException:
                 return argparse.Namespace()
 
     @abstractmethod
-    def print_help(self, file=None) -> None:
+    def print_help(self, file: Optional[IO[str]]=None) -> None:
         '''Prints the help message'''
 
     @property
-    def group(self):
+    def group(self) -> Optional[str]:
         '''The name of the workflow group to which this group belongs.'''
         return self._group
 
     @group.setter
-    def group(self, value):
+    def group(self, value: Optional[str]) -> None:
         self._group = value
 
     @group.deleter
-    def group(self):
+    def group(self) -> None:
         self._group = None
 
     @property
-    def description(self):
+    def description(self) -> Optional[str]:
         '''A short description of the workflow, used when listing the
         workflows.
         '''
         return self._description
 
     @description.setter
-    def description(self, value):
+    def description(self, value: Optional[str]) -> None:
         self._description = value
 
     @description.deleter
-    def description(self):
+    def description(self) -> None:
         self._description = None
 
 
@@ -268,11 +267,12 @@ class SnakeArgumentParser(SnakeParser):
     parser's constructor. '''
 
     @abstractmethod
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.parser = _ArgumentParser(fromfile_prefix_chars=SnakeParser.FROMFILE_PREFIX_CHARS, **kwargs)
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__()
+        self.parser = _ArgumentParser(fromfile_prefix_chars=SnakeParser.FROMFILE_PREFIX_CHARS,
+                                      **kwargs)
 
-    def parse_args(self, args) -> Any:
+    def parse_args(self, args: List[str]) -> Any:
         '''Parses the command line arguments.'''
         return self.parser.parse_args(args=args)
 
@@ -280,7 +280,7 @@ class SnakeArgumentParser(SnakeParser):
         '''Parses command line arguments from an arguments file'''
         return self.parse_args(args=['@' + str(args_file)])
 
-    def print_help(self, file=None) -> None:
+    def print_help(self, file: Optional[IO[str]]=None) -> None:
         '''Prints the help message'''
         self.parser.print_help(suppress=False, file=file)
 
@@ -311,7 +311,7 @@ class SnakeParseWorkflow(object):
                  name: str,
                  snakefile: Path,
                  group: Optional[str] = None,
-                 description: Optional[str] = None):
+                 description: Optional[str] = None) -> None:
         self.name        = name
         self.snakefile   = snakefile
         self.group       = group
@@ -379,20 +379,20 @@ class SnakeParseConfig(object):
                  config_path: Optional[Path]=None,
                  prog: str=None,
                  snakemake: Optional[Path]=None,
-                 name_transform=None,
+                 name_transform: str=None,
                  parent_dir_is_group_name: bool=True,
                  workflows: Dict[str, 'SnakeParseWorkflow'] = OrderedDict(),
                  groups: Dict[str, str] = OrderedDict(),
-                 snakefile_globs: Optional[List[str]] = []):
+                 snakefile_globs: Optional[List[str]] = []) -> None:
         self.prog                     = prog
         self.snakemake                = snakemake
-        self.name_transform           = name_transform
+        self.name_transform           = None
         self.parent_dir_is_group_name = parent_dir_is_group_name
         self.workflows                = workflows
         self.groups                   = groups
 
         if config_path is None:
-            data = OrderedDict()
+            data: OrderedDict = OrderedDict()
         else:
             # Load the JSON configuration data
             with config_path.open('r') as fh:
@@ -407,7 +407,8 @@ class SnakeParseConfig(object):
                     except pyhocon.exceptions.ConfigException as e:
                         if name.endswith('.conf'):
                             raise e
-                        raise SnakeParseException(f"Don't know how to open a {config_path.suffix} config file: {config_path}")
+                        raise SnakeParseException(f"Don't know how to open a {config_path.suffix}"
+                                                  f" config file: {config_path}")
 
         ''' Basic conciguration '''
 
@@ -421,8 +422,13 @@ class SnakeParseConfig(object):
         # Configure how we transform the snakefile file name to the workflow name
         if 'name_transform' in data:
             if name_transform is not None:
-                raise SnakeParseException("name_transform parameter given but found 'name_transform' in {config_path}")
+                raise SnakeParseException("name_transform parameter given but found"
+                                          f"'name_transform' in {config_path}")
             self.name_transform = self.name_transfrom_from(data['name_transform'])
+        elif name_transform is not None:
+            self.name_transform = self.name_transfrom_from(name_transform)
+        else:
+            self.name_transfrom = None
 
         # This controls if the workflows group attribute should be set to
         # the parent directory of the snakefile
@@ -432,7 +438,7 @@ class SnakeParseConfig(object):
         else:
             self.parent_dir_is_group_name = False
 
-        def paths_from(maybe_glob: str) -> Tuple[Path, str]:
+        def paths_from(maybe_glob: str) -> List[Path]:
             if maybe_glob.startswith('/'):
                 glob_root = Path('/')
                 glob = maybe_glob[1:]
@@ -455,24 +461,29 @@ class SnakeParseConfig(object):
         if 'workflows' in data:
             workflows = data['workflows']
             if not isinstance(workflows, list):
-                raise SnakeParseException(f"Expected a list of workflows at 'workflows' in {config_path}")
+                raise SnakeParseException(
+                    f"Expected a list of workflows at 'workflows' in {config_path}"
+                )
 
             # check that no names are found twice
             names = list(workflows.keys())
             duplicates = set([name for name in names if names.count(name) > 1])
             if duplicates:
                 duplicate_names = ", ".join(duplicates)
-                raise SnakeParseException(f"Found multiple workflows with the same name '{duplicate_names}' in {config_path}")
+                raise SnakeParseException(
+                    "Found multiple workflows with the same name"
+                    f" '{duplicate_names}' in {config_path}"
+                )
 
             for name in workflows:
                 workflow_data = workflows[name]
 
                 # if the workflow exists, overwrite the values
                 existing_workflow = self.workflows.get(name)
-                def get_existing(key):
-                    return None if existing_workflow is None else geattr(existing_workflow, key)
 
                 # Set the defaults to the existing workflows, if any
+                def get_existing(key):
+                    return None if existing_workflow is None else getattr(existing_workflow, key)
                 snakefile   = get_existing('snakefile')
                 group       = get_existing('group')
                 description = get_existing('description')
@@ -481,7 +492,9 @@ class SnakeParseConfig(object):
                 if 'snakefile' in workflow_data:
                     snakefile = Path(workflow_data['snakefile'])
                 else:
-                    raise SnakeParseException(f"No snakefile given for workflow with name '{name}' in {config_path}")
+                    raise SnakeParseException(
+                        f"No snakefile given for workflow with name'{name}' in {config_path}"
+                    )
 
                 # group
                 if 'group' in workflow_data:
@@ -492,11 +505,16 @@ class SnakeParseConfig(object):
                 if group is not None:
                     self.groups[group] = None
 
-                # description
-                description = workflow_data['description'] if 'description' in workflow_data else description
+                # override description
+                description = workflow_data.get('description', description)
 
                 # build the workflow
-                workflow = SnakeParseWorkflow(name=name, snakefile=snakefile, group=group, description=description)
+                workflow = SnakeParseWorkflow(
+                    name=name,
+                    snakefile=snakefile,
+                    group=group,
+                    description=description
+                )
                 self.workflows[name] = workflow
 
         # Next, load the group and description from the snakeparse files, if the
@@ -511,13 +529,14 @@ class SnakeParseConfig(object):
                 wf.description = parser.description
 
         # sort the workflows by group, then name
-        self.workflows = OrderedDict([(wf.name, wf) for wf in sorted(self.workflows.values(), key=lambda wf: (str(wf.group), wf.name))])
+        sorted_workflows = sorted(self.workflows.values(), key=lambda wf: (str(wf.group), wf.name))
+        self.workflows = OrderedDict([(wf.name, wf) for wf in sorted_workflows])
 
         # Add the description for each group
         if 'groups' in data:
             self.groups[group] = data['groups']
 
-    def add_workflow(self, workflow: SnakeParseWorkflow) -> 'SnakeParseConfig':
+    def add_workflow(self, workflow: SnakeParseWorkflow) -> 'SnakeParseWorkflow':
         '''Adds the workflow to the list of workflows.  A workflow with the same
         name should not exist.'''
         if workflow.name in self.workflows:
@@ -525,7 +544,7 @@ class SnakeParseConfig(object):
         self.workflows[workflow.name] = workflow
         return workflow
 
-    def add_snakefile(self, snakefile: Path) -> 'SnakeParseConfig':
+    def add_snakefile(self, snakefile: Path) -> 'SnakeParseWorkflow':
         '''Adds a new workflow with the given snakefile. A workflow with the
         same name should not exist.'''
         name        = snakefile.with_suffix('').name
@@ -537,7 +556,12 @@ class SnakeParseConfig(object):
         description = None
         if name in self.workflows:
             raise SnakeParseException(f"Multiple workflows with name '{name}'.")
-        workflow = SnakeParseWorkflow(name=name, snakefile=snakefile, group=group, description=description)
+        workflow = SnakeParseWorkflow(
+            name=name,
+            snakefile=snakefile,
+            group=group,
+            description=description
+        )
         return self.add_workflow(workflow=workflow)
 
     def add_group(self, name: str, description: str, strict: bool = True) -> 'SnakeParseConfig':
@@ -549,7 +573,7 @@ class SnakeParseConfig(object):
         return self
 
     @staticmethod
-    def name_transfrom_from(key) -> None:
+    def name_transfrom_from(key: str) -> Callable[[str], str]:
         '''Returns the built-in method to format the workflow's name.  Should be
         either 'snake_to_camel' or 'camel_to_snake' for converting from Snake case
         to Camel case, or vice versa.
@@ -588,39 +612,51 @@ class SnakeParseConfig(object):
         exec_exception = None
 
         # Compile and execute it!
-        with workflow.snakefile.open('r') as fh:
-            from snakemake.parser import parse
-            from snakemake.workflow import Workflow
+        from snakemake.workflow import Workflow
 
-            snakefile = str(workflow.snakefile)
+        snakefile = str(workflow.snakefile)
 
-            # create a config with an undefined argument file so that parsing is skipped
-            global config
-            config = dict([(SnakeParse.ARGUMENT_FILE_NAME_KEY, None)])
-            # add the config to a globals copy
-            globals_copy = dict(globals())
-            globals_copy['config'] = dict([(SnakeParse.ARGUMENT_FILE_NAME_KEY, None)])
-            # parsing with snakemake requires there to be a global workflow object
-            globals_copy['workflow'] = Workflow(snakefile=snakefile)
+        # create a config with an undefined argument file so that parsing is skipped
+        global config
+        config = dict([(SnakeParse.ARGUMENT_FILE_NAME_KEY, None)])  # type: ignore
+        # add the config to a globals copy
+        globals_copy = dict(globals())
+        globals_copy['config'] = dict([(SnakeParse.ARGUMENT_FILE_NAME_KEY, None)])
+        # parsing with snakemake requires there to be a global workflow object
+        globals_copy['workflow'] = Workflow(snakefile=snakefile)
 
-            # compile the snakefile using snakemake's parse method
-            code, linemap, rulecount = snakemake_parser.parse(snakefile)
-            code = compile(code, snakefile, 'exec')
-            try:
-                exec(code, globals_copy)
-            except Exception as e:
-                # in the case of required parser arguments, we may get some type
-                # of exception
-                #if not str(e).startswith("'Namespace'"):
-                #    raise e
-                exec_exception = SnakeParseException(f'Could not compile {snakefile}', e)
+        # compile the snakefile using snakemake's parse method
+        code, linemap, rulecount = snakemake_parser.parse(snakefile)
+        code = compile(code, snakefile, 'exec')
+        try:
+            exec(code, globals_copy)
+        except Exception as e:
+            # in the case of required parser arguments, we may get some type
+            # of exception
+            # if not str(e).startswith("'Namespace'"):
+            #     raise e
+            exec_exception = SnakeParseException(f'Could not compile {snakefile}', e)
 
-        classes = [obj for key, obj in globals_copy.items() if inspect.isclass(obj) and not inspect.isabstract(obj) and SnakeParser in inspect.getmro(obj)]
-        methods = [obj for key, obj in globals_copy.items() if key == 'snakeparser' and inspect.isfunction(obj)]
+        def classes_predicate(obj: Any) -> bool:
+            return inspect.isclass(obj) and \
+                not inspect.isabstract(obj) and \
+                SnakeParser in inspect.getmro(obj)
+
+        def methods_predicate(key: str, obj: Any) -> bool:
+            return key == 'snakeparser' and inspect.isfunction(obj)
+
+        classes = [obj for key, obj in globals_copy.items() if classes_predicate(obj)]
+        methods = [obj for key, obj in globals_copy.items() if methods_predicate(key, obj)]
         if len(classes) + len(methods) == 0:
-            raise SnakeParseException(f'Could not find either a concrete subclass of SnakeParser or a method named snakeparser in {workflow.snakefile}', exec_exception)
+            raise SnakeParseException(
+                'Could not find either a concrete subclass of SnakeParser or a method named'
+                f' "snakeparser" in {workflow.snakefile}',
+                exec_exception)
         elif len(classes) + len(methods) > 1:
-            raise SnakeParseException(f'Found {len(classes)} concrete subclasses of SnakeParser and {len(methods)} methods named snakeparser in {workflow.snakefile}', exec_exception)
+            raise SnakeParseException(
+                f'Found {len(classes)} concrete subclasses of SnakeParser and {len(methods)}'
+                f' methods named snakeparser in {workflow.snakefile}',
+                exec_exception)
         elif len(classes) == 1 and len(methods) == 0:
             parser_class = classes[0]
             if issubclass(parser_class, SnakeArgumentParser):
@@ -628,7 +664,8 @@ class SnakeParseConfig(object):
             else:
                 return parser_class()
         else:
-            assert len(classes) == 0 and len(methods) == 1, f'Bug: {len(classes)} != 0 and {len(methods)} != 1'
+            assert len(classes) == 0 and len(methods) == 1, \
+                f'Bug: {len(classes)} != 0 and {len(methods)} != 1'
             parser_method = methods[0]
             parser = parser_method()
             if issubclass(parser.__class__, SnakeArgumentParser):
@@ -637,38 +674,44 @@ class SnakeParseConfig(object):
                 return parser
 
     @staticmethod
-    def config_parser(usage = argparse.SUPPRESS) -> argparse.ArgumentParser:
+    def config_parser(usage: str=argparse.SUPPRESS) -> argparse.ArgumentParser:
         '''Returns an :class:`~argparse.ArgumentParser` for the configuration options'''
 
         # An argument parser that doesn't exit
         class _ConfigParser(_ArgumentParser):
-            def exit(self, status=0, message=None):
+            def exit(self, status: int=0, message: str=None) -> None:
                 raise SnakeParseException(message)
+
         parser = _ConfigParser(usage=usage, allow_abbrev=False)
         parser.add_argument('--config',
-            help='The path to the snakeparse configuration file (can be JSON, YAML, or HOCON).',
-            type=Path)
+                            help='The path to the snakeparse configuration file'
+                                 ' (can be JSON, YAML, or HOCON).',
+                            type=Path)
         parser.add_argument('--snakefile-globs',
-            help='Optionally, or more glob strings specifying where SnakeMake (snakefile) files can be found',
-            nargs='*',
-            default=[])
+                            help='Optionally, or more glob strings specifying where'
+                                 ' SnakeMake (snakefile) files can be found',
+                            nargs='*',
+                            default=[])
         parser.add_argument('--prog',
-            help='The name of the tool-chain to use ont the command-line',
-            default='snakeparse')
+                            help='The name of the tool-chain to use ont the command-line',
+                            default='snakeparse')
         parser.add_argument('--snakemake',
-            help='The path to the snakemake executable, otherwise it should be on the system path',
-            type=Path)
+                            help='The path to the snakemake executable, otherwise it should be on'
+                                 ' the system path',
+                            type=Path)
         parser.add_argument('--name-transform',
-            help='Transform the name of the workflow from Snake case to Camel case ("snake_to_camel") or vice versa ("camel_to_snake")',
-            default='snake_to_camel')
+                            help='Transform the name of the workflow from Snake case to Camel case'
+                                 '("snake_to_camel") or vice versa ("camel_to_snake")',
+                            default='snake_to_camel')
         parser.add_argument('--parent-dir-is-group-name',
-            help='In the last resort if no group name is found, use the name of the parent directory of the snakefile as the group name',
-            type=bool,
-            default=False)
+                            help='In the last resort if no group name is found, use the name of'
+                                 ' the parent directory of the snakefile as the group name',
+                            type=bool,
+                            default=False)
         parser.add_argument('--extra-help',
-            help='Produce help with extra debugging information',
-            type=bool,
-            default=False)
+                            help='Produce help with extra debugging information',
+                            type=bool,
+                            default=False)
         return parser
 
 
@@ -694,11 +737,10 @@ class SnakeParse(object):
                  args: List[str]=[],
                  config: Optional['SnakeParseConfig']=None,
                  debug: bool = False,
-                 file: TextIOWrapper = sys.stdout):
+                 file: IO[str] = sys.stdout) -> None:
         self.config = config
         self.debug  = debug
         self.file   = file
-
 
         # sets whether or not to output the SnakeParseConfig usage as part of the general
         # usage
@@ -718,7 +760,9 @@ class SnakeParse(object):
             # parse the leading arguments until an unknonwn argument is found or no more
             # arguments exist.  Prepend an arg for argparse to work.
             try:
-                args_end, config_args = self._parse_known_args(args=args, parser=SnakeParseConfig.config_parser(usage=SnakeParse.usage_short()))
+                args_end, config_args = self._parse_known_args(
+                    args=args,
+                    parser=SnakeParseConfig.config_parser(usage=SnakeParse.usage_short()))
                 remaining_args = args[args_end:]
             except SnakeParseException as e:
                 self._usage(message=str(e))
@@ -734,7 +778,7 @@ class SnakeParse(object):
                 config_path              = config_args.config,
                 prog                     = config_args.prog,
                 snakemake                = config_args.snakemake,
-                name_transform           = SnakeParseConfig.name_transfrom_from(config_args.name_transform),
+                name_transform           = config_args.name_transform,
                 parent_dir_is_group_name = config_args.parent_dir_is_group_name,
                 snakefile_globs          = config_args.snakefile_globs
             )
@@ -765,7 +809,7 @@ class SnakeParse(object):
             if option in args[:end]:
                 idx = args[:end].index(option)
                 if idx + 1 < end:
-                    snakefile = Path(args[idx+1])
+                    snakefile = Path(args[idx + 1])
                     has_snakefile_argument = True
                     break
         if snakefile is not None:
@@ -791,20 +835,19 @@ class SnakeParse(object):
             # Check if the workflow name is _after_ the '--'
             idx = args.index('--')
             if idx + 1 < len(args):
-                name = args[idx+1]
+                name = args[idx + 1]
                 if name in self.config.workflows:
                     workflow_name = name
                     snakemake_args_end = idx
-                    workflow_args_start = idx+2
-            if workflow_name is None and  len(self.config.workflows) == 1:
+                    workflow_args_start = idx + 2
+            if workflow_name is None and len(self.config.workflows) == 1:
                 workflow_name  = list(self.config.workflows.keys())[0]
                 snakemake_args_end = idx
-                workflow_args_start = idx+1
+                workflow_args_start = idx + 1
         elif args:
             # find workflow name in args, use it
             for wf_name in self.config.workflows:
                 if wf_name in args:
-                    args_split_value    = wf_name
                     workflow_name       = wf_name
                     snakemake_args_end  = args.index(wf_name)
                     workflow_args_start = args.index(wf_name) + 1
@@ -833,9 +876,12 @@ class SnakeParse(object):
                 fh.write(arg + '\n')
             self.snakeparse_args_file = Path(fh.name)
         # 2. Parse with snakeparse
-        self._parse_workflow_args(workflow=self.workflow, args_file=Path(self.snakeparse_args_file).resolve())
+        self._parse_workflow_args(workflow=self.workflow,
+                                  args_file=Path(self.snakeparse_args_file).resolve())
         # 3. Add the custom config argument.
-        self.snakemake_args.extend(['--config', f"{SnakeParse.ARGUMENT_FILE_NAME_KEY}={self.snakeparse_args_file}"])
+        self.snakemake_args.extend(
+            ['--config', f"{SnakeParse.ARGUMENT_FILE_NAME_KEY}={self.snakeparse_args_file}"]
+        )
         # 4. Add the --snakefile argument if necessary
         if not has_snakefile_argument:
             self.snakemake_args.extend(['--snakefile', str(self.workflow.snakefile.resolve())])
@@ -843,7 +889,7 @@ class SnakeParse(object):
     def run(self) -> None:
         '''Execute the Snakemake workflow'''
         snakemake = self.config.snakemake if self.config.snakemake else 'snakemake'
-        retcode = subprocess.call([snakemake] + self.snakemake_args)
+        retcode = subprocess.call([str(snakemake)] + self.snakemake_args)
         self.snakeparse_args_file.unlink()
         sys.exit(retcode)
 
@@ -863,7 +909,10 @@ class SnakeParse(object):
             # most likely help
             self._print_workflow_help(workflow=workflow, parser=parser, message=None)
 
-    def _print_workflow_help(self, workflow: 'SnakeParseWorkflow', parser: 'SnakeParser', message: Optional[str] = None) -> None:
+    def _print_workflow_help(self,
+                             workflow: 'SnakeParseWorkflow',
+                             parser: 'SnakeParser',
+                             message: Optional[str] = None) -> None:
         '''Prints the help message with all available workflows and the workflow
         specific help.'''
         self._usage(exit=False)
@@ -879,7 +928,8 @@ class SnakeParse(object):
         sys.exit(2)
 
     @staticmethod
-    def _parse_known_args(parser, args):
+    def _parse_known_args(parser: argparse.ArgumentParser,
+                          args: Sequence[str]) -> Tuple[int, argparse.Namespace]:
         '''Parses the args with the given parsers until an unknown argument is
         encountered.'''
         if not args:
@@ -891,7 +941,7 @@ class SnakeParse(object):
             try:
                 namespace, remaining = parser.parse_known_args(args=args[:end])
                 if remaining:
-                    return end-1, namespace
+                    return end - 1, namespace
             except SnakeParseException:
                 # Keep going, as we may require values in args
                 pass
@@ -899,24 +949,28 @@ class SnakeParse(object):
             end += 1
         return end, namespace
 
-    def _usage_short(self, workflow_name=None) -> str:
-        prog = self.config.prog if self.config is not None and self.config.prog is not None else "snakeparse"
+    def _usage_short(self, workflow_name: str=None) -> str:
+        if self.config is not None and self.config.prog is not None:
+            prog = self.config.prog
+        else:
+            prog = "snakeparse"
         return self.usage_short(prog=prog, workflow_name=workflow_name)
 
     @staticmethod
-    def usage_short(prog="snakeparse", workflow_name=None) -> str:
+    def usage_short(prog: str="snakeparse", workflow_name: str=None) -> str:
         '''A one line usage to display at the top of any usage or help message.'''
         if workflow_name is None:
             workflow_name = '[workflow name]'
-        return f'{prog} [snakeparse options] [snakemake options] {workflow_name} [workflow options]'.lstrip(' ')
+        return f'{prog} [snakeparse options] [snakemake options]' \
+            f' {workflow_name} [workflow options]'.lstrip(' ')
 
-    def _print_line(self):
-        self.file.write(('-'*60) + '\n')
+    def _print_line(self) -> None:
+        self.file.write(('-' * 60) + '\n')
 
-    def _usage(self, message: Optional[str] = None, exit: bool =True):
+    def _usage(self, message: Optional[str] = None, exit: bool =True) -> None:
         '''The long usage that lists all the available workflows.'''
         terminal_size = shutil.get_terminal_size(fallback=(80, 24))
-        group_name_columns = 38 # includes the colon
+        group_name_columns = 38  # includes the colon
         group_description_columns = terminal_size.columns - group_name_columns
         workflow_name_columns = group_name_columns - 3
         workflow_description_columns = group_description_columns - 1
@@ -928,7 +982,9 @@ class SnakeParse(object):
         # SnakeParse help
         if self._config_usage:
             self.file.write('\n')
-            SnakeParseConfig.config_parser().print_help(suppress=False, file=self.file)
+            SnakeParseConfig.config_parser().print_help(  # type: ignore
+                file=self.file,
+                suppress=False)
 
         # Print the workflows, grouped by group.
         if self.config.workflows:
@@ -936,17 +992,20 @@ class SnakeParse(object):
             self._print_line()
             groups = OrderedDict(self.config.groups)
             for wf in self.config.workflows.values():
-                if not wf.group in groups:
+                if wf.group not in groups:
                     groups[wf.group] = None
             for group, desc in groups.items():
                 name = ('Worfklows' if group is None else group) + ':'
                 desc = '' if desc is None else desc
-                self.file.write(f'{name:<{group_name_columns}}{desc:<{group_description_columns}}\n')
+                self.file.write(
+                    f'{name:<{group_name_columns}}{desc:<{group_description_columns}}\n'
+                )
                 for wf in self.config.workflows.values():
                     if wf.group != group:
                         continue
                     desc = str(wf.snakefile) if wf.description is None else wf.description
-                    self.file.write(f'    {wf.name:<{workflow_name_columns}}{desc:<{workflow_description_columns}}\n')
+                    self.file.write(f'    {wf.name:<{workflow_name_columns}}'
+                                    f'{desc:<{workflow_description_columns}}\n')
                     if self.debug:
                         self.file.write(f'        snakefile:  {wf.snakefile}\n')
                 self._print_line()
